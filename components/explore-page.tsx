@@ -89,10 +89,10 @@ function ExploreContent({
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            Explorar publicaciones
+            Explorar recursos digitales
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Busca y filtra proyectos por diferentes criterios
+            Busca y filtra recursos digitales por diferentes criterios
           </p>
         </div>
 
@@ -208,14 +208,14 @@ function ExploreContent({
         </div>
 
         <p className="mb-6 text-sm text-muted-foreground">
-          {filteredPublications.length} publicación(es) encontrada(s)
+          {filteredPublications.length} recurso(s) digital(es) encontrado(s)
         </p>
 
         {filteredPublications.length === 0 ? (
           <div className="rounded-lg border border-border bg-muted/30 p-12 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 font-semibold text-foreground">
-              No se encontraron publicaciones
+              No se encontraron recursos digitales
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
               Intenta con otros términos de búsqueda o filtros

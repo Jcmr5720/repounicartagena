@@ -68,7 +68,7 @@ export function UploadPage() {
                 Acceso requerido
               </h2>
               <p className="mb-6 text-muted-foreground">
-                Debes iniciar sesión para subir un proyecto.
+                Debes iniciar sesión para subir un recurso digital.
               </p>
               <Button onClick={() => setAuthModalOpen(true)}>
                 Iniciar sesión
@@ -135,23 +135,23 @@ export function UploadPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Subir proyecto</h1>
+        <h1 className="text-3xl font-bold text-foreground">Subir REDS</h1>
         <p className="mt-2 text-muted-foreground">
-          Completa el formulario para publicar tu trabajo académico
+          Completa el formulario para publicar tu recurso digital
         </p>
       </div>
 
       {submitStatus === "success" && (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800">
           <CheckCircle className="h-5 w-5" />
-          <span>Proyecto publicado correctamente.</span>
+          <span>Recurso digital publicado correctamente.</span>
         </div>
       )}
 
       {submitStatus === "error" && (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-destructive/10 p-4 text-destructive">
           <AlertCircle className="h-5 w-5" />
-          <span>Error al publicar el proyecto. Intenta de nuevo.</span>
+          <span>Error al publicar el recurso digital. Intenta de nuevo.</span>
         </div>
       )}
 
@@ -159,20 +159,20 @@ export function UploadPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
-            Información del proyecto
+            Información del recurso digital
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título del proyecto *</Label>
+              <Label htmlFor="titulo">Título del recurso digital *</Label>
               <Input
                 id="titulo"
                 value={formData.titulo}
                 onChange={(e) =>
                   setFormData({ ...formData, titulo: e.target.value })
                 }
-                placeholder="Ingresa el título de tu proyecto"
+                placeholder="Ingresa el título de tu recurso digital"
                 required
               />
             </div>
@@ -269,7 +269,7 @@ export function UploadPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, resumen: e.target.value })
                 }
-                placeholder="Escribe un resumen de tu proyecto (máximo 500 caracteres)"
+                placeholder="Escribe un resumen de tu recurso digital (máximo 500 caracteres)"
                 rows={4}
                 maxLength={500}
                 required
@@ -359,7 +359,7 @@ export function UploadPage() {
                 !selectedFile
               }
             >
-              {isSubmitting ? "Publicando..." : "Publicar proyecto"}
+              {isSubmitting ? "Publicando..." : "Publicar REDS"}
             </Button>
           </form>
         </CardContent>

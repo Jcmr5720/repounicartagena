@@ -51,7 +51,7 @@ export const INITIAL_PUBLICATIONS: Publication[] = [
     programa: "Ingeniería de Sistemas",
     año: 2025,
     lineaTematica: "Tecnología Educativa",
-    resumen: "Este proyecto analiza la implementación de herramientas de inteligencia artificial en instituciones de educación superior en Colombia, evaluando su impacto en el aprendizaje y la enseñanza. Se propone un modelo de integración que respeta la pedagogía tradicional mientras aprovecha las capacidades de la IA para personalizar la experiencia educativa.",
+    resumen: "Este recurso digital analiza la implementación de herramientas de inteligencia artificial en instituciones de educación superior en Colombia, evaluando su impacto en el aprendizaje y la enseñanza. Se propone un modelo de integración que respeta la pedagogía tradicional mientras aprovecha las capacidades de la IA para personalizar la experiencia educativa.",
     palabrasClave: ["inteligencia artificial", "educación", "tecnología", "aprendizaje"],
     estado: "publicado",
     fechaPublicacion: "2025-03-15",
@@ -87,7 +87,7 @@ export const INITIAL_PUBLICATIONS: Publication[] = [
     programa: "Ingeniería Civil",
     año: 2025,
     lineaTematica: "Ingeniería Estructural",
-    resumen: "Desarrollo de un sistema de monitoreo estructural basado en Internet de las Cosas para edificaciones en zonas sísmicas. El proyecto incluye el diseño de sensores de bajo costo y una plataforma web para visualización de datos en tiempo real.",
+    resumen: "Desarrollo de un sistema de monitoreo estructural basado en Internet de las Cosas para edificaciones en zonas sísmicas. El recurso digital incluye el diseño de sensores de bajo costo y una plataforma web para visualización de datos en tiempo real.",
     palabrasClave: ["IoT", "estructuras", "monitoreo", "ingeniería civil"],
     estado: "publicado",
     fechaPublicacion: "2025-01-25",
@@ -111,7 +111,7 @@ export const INITIAL_PUBLICATIONS: Publication[] = [
     programa: "Licenciatura en Matemáticas",
     año: 2025,
     lineaTematica: "Pedagogía",
-    resumen: "Proyecto de investigación-acción que implementa metodologías activas como el aprendizaje basado en problemas y la gamificación en la enseñanza de matemáticas. Los resultados muestran mejoras significativas en el rendimiento y la motivación de los estudiantes.",
+    resumen: "Recurso digital de investigación-acción que implementa metodologías activas como el aprendizaje basado en problemas y la gamificación en la enseñanza de matemáticas. Los resultados muestran mejoras significativas en el rendimiento y la motivación de los estudiantes.",
     palabrasClave: ["educación", "matemáticas", "pedagogía", "metodologías activas"],
     estado: "publicado",
     fechaPublicacion: "2025-04-01",
@@ -121,7 +121,7 @@ export const INITIAL_PUBLICATIONS: Publication[] = [
 export const UPDATES = [
   {
     id: "1",
-    titulo: "Nueva guía para subir proyectos en PDF",
+    titulo: "Nueva guia para subir recursos digitales en PDF",
     fecha: "Mayo 2026",
   },
   {

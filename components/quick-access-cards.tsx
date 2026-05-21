@@ -14,21 +14,21 @@ const cards = [
     icon: Search,
     title: "Buscar",
     description:
-      "Explora proyectos por programa académico, autor, fecha o línea temática.",
+      "Explora recursos digitales por programa academico, autor, fecha o linea tematica.",
     href: "/explorar",
   },
   {
     icon: Upload,
     title: "Publicar",
     description:
-      "Sube tu proyecto en PDF y completa los datos básicos para hacerlo visible.",
+      "Sube tu recurso digital en PDF y completa los datos basicos para hacerlo visible.",
     href: "/subir",
   },
   {
     icon: Compass,
     title: "Explorar",
     description:
-      "Descubre trabajos recientes, destacados y áreas de conocimiento.",
+      "Descubre recursos recientes, destacados y areas de conocimiento.",
     href: "/explorar",
   },
 ];

@@ -14,7 +14,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Repositorio UniCartagena",
   description:
-    "Repositorio académico de proyectos estudiantiles de la Universidad de Cartagena",
+    "Repositorio de recursos digitales (REDS) de la Universidad de Cartagena",
   generator: "v0.app",
   icons: {
     icon: [

@@ -18,7 +18,7 @@ export function Header() {
   const navItems = [
     { label: "Inicio", href: "/" },
     { label: "Explorar", href: "/explorar" },
-    { label: "Subir proyecto", href: "/subir" },
+    { label: "Subir REDS", href: "/subir" },
     { label: "Mi cuenta", href: "/cuenta" },
   ];
 
@@ -48,7 +48,7 @@ export function Header() {
                   Repositorio UniCartagena
                 </span>
                 <span className="hidden text-xs text-muted-foreground sm:block">
-                  Repositorio académico de proyectos estudiantiles
+                  Repositorio de recursos digitales (REDS)
                 </span>
               </div>
             </Link>

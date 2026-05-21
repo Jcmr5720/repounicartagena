@@ -37,7 +37,7 @@ export function PublicationDetailPage({
               Publicación no encontrada
             </h2>
             <p className="mb-6 text-muted-foreground">
-              La publicación solicitada no existe o no está disponible todavía.
+              El recurso digital solicitado no existe o no esta disponible todavia.
             </p>
             <Button asChild>
               <Link href="/explorar">Volver a explorar</Link>
@@ -81,7 +81,7 @@ export function PublicationDetailPage({
                 {publication.titulo}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Detalle de la publicación en el repositorio académico
+                Detalle del recurso digital en el repositorio
               </p>
             </div>
           </div>

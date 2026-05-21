@@ -86,7 +86,7 @@ export function AdminPage() {
           Panel de administración
         </h1>
         <p className="mt-2 text-muted-foreground">
-          Gestiona las publicaciones y usuarios del repositorio
+          Gestiona los recursos digitales y usuarios del repositorio
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export function AdminPage() {
                 {publications.length}
               </p>
               <p className="text-sm text-muted-foreground">
-                Total publicaciones
+                Total recursos
               </p>
             </div>
           </CardContent>
@@ -191,13 +191,13 @@ export function AdminPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Gestión de publicaciones
+            Gestion de recursos digitales
           </CardTitle>
         </CardHeader>
         <CardContent>
           {publications.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
-              No hay publicaciones registradas
+              No hay recursos digitales registrados
             </div>
           ) : (
             <div className="space-y-4">
@@ -248,9 +248,9 @@ export function AdminPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar publicación?</AlertDialogTitle>
+            <AlertDialogTitle>Eliminar recurso digital?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. La publicación será eliminada
+              Esta accion no se puede deshacer. El recurso digital sera eliminado
               permanentemente del repositorio.
             </AlertDialogDescription>
           </AlertDialogHeader>

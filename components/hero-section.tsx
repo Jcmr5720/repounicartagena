@@ -28,19 +28,19 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           {/* Badge */}
           <div className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
             <span className="mr-2 h-2 w-2 rounded-full bg-primary" />
-            Repositorio Académico Institucional
+            Repositorio de Recursos Digitales
           </div>
 
           {/* Title */}
           <h1 className="mx-auto max-w-4xl text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
             Consulta, publica y preserva{" "}
-            <span className="text-primary">trabajos académicos</span>
+            <span className="text-primary">recursos digitales</span>
           </h1>
 
           {/* Subtitle */}
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-            Un espacio digital para reunir proyectos, investigaciones y
-            documentos desarrollados por estudiantes de UniCartagena.
+            Un espacio digital para reunir recursos digitales, informes,
+            guias y materiales desarrollados por la comunidad UniCartagena.
           </p>
 
           {/* Search Form */}
@@ -55,7 +55,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por título, autor, programa, palabra clave o año..."
+                  placeholder="Buscar por titulo, autor, programa, palabra clave o anio..."
                   className="h-14 pl-12 pr-4 text-base shadow-sm"
                 />
               </div>
@@ -83,7 +83,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           <div className="mt-12 flex flex-wrap items-center justify-center gap-8">
             <div className="text-center">
               <div className="text-2xl font-bold text-foreground sm:text-3xl">500+</div>
-              <div className="text-sm text-muted-foreground">Proyectos publicados</div>
+              <div className="text-sm text-muted-foreground">REDS publicados</div>
             </div>
             <div className="hidden h-8 w-px bg-border sm:block" />
             <div className="text-center">

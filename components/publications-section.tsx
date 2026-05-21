@@ -20,10 +20,10 @@ export function PublicationsSection() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Publicaciones recientes
+              Recursos digitales recientes
             </h2>
             <p className="mt-1 text-muted-foreground">
-              Descubre los últimos proyectos publicados por estudiantes
+              Descubre los últimos recursos digitales publicados por la comunidad
             </p>
           </div>
         </div>
@@ -32,10 +32,10 @@ export function PublicationsSection() {
           <div className="rounded-lg border border-border bg-background p-12 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-4 font-semibold text-foreground">
-              No se encontraron publicaciones
+              No se encontraron recursos digitales
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Aún no hay publicaciones en el repositorio
+              Aun no hay recursos digitales en el repositorio
             </p>
           </div>
         ) : (

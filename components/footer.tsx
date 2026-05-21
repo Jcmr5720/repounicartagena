@@ -10,8 +10,8 @@ export function Footer() {
               Repositorio UniCartagena
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Plataforma académica para la consulta y publicación de trabajos
-              estudiantiles de la Universidad de Cartagena.
+              Plataforma para la consulta y publicacion de recursos digitales
+              (REDS) de la Universidad de Cartagena.
             </p>
           </div>
 
