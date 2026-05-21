@@ -14,30 +14,42 @@ interface PublicationsContextType {
 }
 
 const PublicationsContext = createContext<PublicationsContextType | undefined>(undefined);
+const PUBLICATIONS_STORAGE_KEY = "reds_colombia_publications";
+const LEGACY_PUBLICATIONS_STORAGE_KEY = ["repo", "sitorio_publications"].join("");
 
 export function PublicationsProvider({ children }: { children: ReactNode }) {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const savedPublications = localStorage.getItem("repositorio_publications");
+    const savedPublications =
+      localStorage.getItem(PUBLICATIONS_STORAGE_KEY) ||
+      localStorage.getItem(LEGACY_PUBLICATIONS_STORAGE_KEY);
     if (savedPublications) {
       try {
         setPublications(JSON.parse(savedPublications));
+        localStorage.setItem(PUBLICATIONS_STORAGE_KEY, savedPublications);
+        localStorage.removeItem(LEGACY_PUBLICATIONS_STORAGE_KEY);
       } catch {
         setPublications(INITIAL_PUBLICATIONS);
-        localStorage.setItem("repositorio_publications", JSON.stringify(INITIAL_PUBLICATIONS));
+        localStorage.setItem(
+          PUBLICATIONS_STORAGE_KEY,
+          JSON.stringify(INITIAL_PUBLICATIONS)
+        );
       }
     } else {
       setPublications(INITIAL_PUBLICATIONS);
-      localStorage.setItem("repositorio_publications", JSON.stringify(INITIAL_PUBLICATIONS));
+      localStorage.setItem(
+        PUBLICATIONS_STORAGE_KEY,
+        JSON.stringify(INITIAL_PUBLICATIONS)
+      );
     }
     setIsLoading(false);
   }, []);
 
   const savePublications = (pubs: Publication[]) => {
     setPublications(pubs);
-    localStorage.setItem("repositorio_publications", JSON.stringify(pubs));
+    localStorage.setItem(PUBLICATIONS_STORAGE_KEY, JSON.stringify(pubs));
   };
 
   const addPublication = (publication: Omit<Publication, "id" | "fechaPublicacion">) => {

@@ -48,7 +48,7 @@ export function QuickAccessCards() {
                   <h3 className="mb-2 font-semibold text-foreground">
                     {card.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {card.description}
                   </p>
                 </CardContent>

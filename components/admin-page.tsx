@@ -168,7 +168,7 @@ export function AdminPage() {
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
-                    admin@unicartagena.edu.co
+                    admin@redscolombia.co
                   </td>
                 </tr>
                 <tr>
@@ -177,7 +177,7 @@ export function AdminPage() {
                     <Badge variant="outline">Estudiante</Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
-                    prueba@unicartagena.edu.co
+                    prueba@redscolombia.co
                   </td>
                 </tr>
               </tbody>

@@ -91,7 +91,7 @@ function ExploreContent({
           <h1 className="text-3xl font-bold text-foreground">
             Explorar recursos digitales
           </h1>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             Busca y filtra recursos digitales por diferentes criterios
           </p>
         </div>
@@ -109,7 +109,7 @@ function ExploreContent({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-base text-muted-foreground">
               <Filter className="h-4 w-4" />
               Filtros:
             </div>
@@ -168,7 +168,7 @@ function ExploreContent({
 
           {hasFilters && (
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">
+              <span className="text-base text-muted-foreground">
                 Filtros activos:
               </span>
               {searchQuery && (
@@ -207,7 +207,7 @@ function ExploreContent({
           )}
         </div>
 
-        <p className="mb-6 text-sm text-muted-foreground">
+        <p className="mb-6 text-base text-muted-foreground">
           {filteredPublications.length} recurso(s) digital(es) encontrado(s)
         </p>
 
@@ -217,7 +217,7 @@ function ExploreContent({
             <h3 className="mt-4 font-semibold text-foreground">
               No se encontraron recursos digitales
             </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Intenta con otros términos de búsqueda o filtros
             </p>
           </div>
@@ -245,12 +245,12 @@ function ExploreContent({
                   </h3>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col pb-4">
-                  <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mb-3 flex items-center gap-2 text-base text-muted-foreground">
                     <User className="h-4 w-4" />
                     <span className="truncate">{publication.autor}</span>
                   </div>
 
-                  <p className="mb-4 line-clamp-3 flex-1 text-sm text-muted-foreground">
+                  <p className="mb-4 line-clamp-3 flex-1 text-base text-muted-foreground">
                     {publication.resumen}
                   </p>
 
@@ -268,7 +268,7 @@ function ExploreContent({
                   </div>
 
                   <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       {new Date(publication.fechaPublicacion).toLocaleDateString(
                         "es-CO",

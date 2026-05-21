@@ -49,7 +49,7 @@ export function UploadPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="h-96 animate-pulse rounded-lg bg-muted" />
       </div>
     );
@@ -58,7 +58,7 @@ export function UploadPage() {
   if (!user) {
     return (
       <>
-        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
           <Card className="border-border">
             <CardContent className="p-12 text-center">
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
@@ -133,7 +133,7 @@ export function UploadPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground">Subir REDS</h1>
         <p className="mt-2 text-muted-foreground">
@@ -163,7 +163,7 @@ export function UploadPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="titulo">Título del recurso digital *</Label>
               <Input
@@ -190,56 +190,54 @@ export function UploadPage() {
               />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="programa">Programa académico *</Label>
-                <Select
-                  value={formData.programa}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, programa: value })
-                  }
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona programa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROGRAMAS_ACADEMICOS.map((prog) => (
-                      <SelectItem key={prog} value={prog}>
-                        {prog}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="año">Año *</Label>
-                <Select
-                  value={formData.año}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, año: value })
-                  }
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona año" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 10 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
-                      return (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="programa">Programa académico *</Label>
+              <Select
+                value={formData.programa}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, programa: value })
+                }
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona programa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PROGRAMAS_ACADEMICOS.map((prog) => (
+                    <SelectItem key={prog} value={prog}>
+                      {prog}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="año">Año *</Label>
+              <Select
+                value={formData.año}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, año: value })
+                }
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona año" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 10 }, (_, i) => {
+                    const year = new Date().getFullYear() - i;
+                    return (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="lineaTematica">Línea temática *</Label>
               <Select
                 value={formData.lineaTematica}
@@ -261,7 +259,7 @@ export function UploadPage() {
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="resumen">Resumen *</Label>
               <Textarea
                 id="resumen"
@@ -279,7 +277,7 @@ export function UploadPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="palabrasClave">Palabras clave *</Label>
               <Input
                 id="palabrasClave"
@@ -295,7 +293,7 @@ export function UploadPage() {
               </p>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-2">
               <Label>Archivo PDF *</Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -347,7 +345,7 @@ export function UploadPage() {
 
             <Button
               type="submit"
-              className="w-full"
+              className="w-full lg:col-span-2"
               disabled={
                 isSubmitting ||
                 !formData.titulo ||

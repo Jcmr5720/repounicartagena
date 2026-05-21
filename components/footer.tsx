@@ -7,11 +7,11 @@ export function Footer() {
         <div className="grid gap-8 md:grid-cols-3">
           <div>
             <h3 className="text-lg font-bold text-foreground">
-              Repositorio UniCartagena
+              Repositorio REDS Colombia
             </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Plataforma para la consulta y publicacion de recursos digitales
-              (REDS) de la Universidad de Cartagena.
+              de REDS Colombia.
             </p>
           </div>
 
@@ -21,7 +21,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/explorar"
-                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
                   Políticas del repositorio
                 </Link>
@@ -29,15 +29,15 @@ export function Footer() {
               <li>
                 <Link
                   href="/cuenta"
-                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
                   Ayuda
                 </Link>
               </li>
               <li>
                 <Link
-                  href="mailto:repositorio@unicartagena.edu.co"
-                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                  href="mailto:repositorio@redscolombia.edu.co"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
                   Contacto
                 </Link>
@@ -45,7 +45,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/"
-                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
                   Accesibilidad
                 </Link>
@@ -54,20 +54,18 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold text-foreground">
-              Universidad de Cartagena
-            </h4>
-            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              <li>Centro, Calle de la Universidad</li>
-              <li>Cartagena de Indias, Colombia</li>
-              <li>Fundada en 1827</li>
+            <h4 className="font-semibold text-foreground">REDS Colombia</h4>
+            <ul className="mt-3 space-y-2 text-base text-muted-foreground">
+              <li>Sede principal</li>
+              <li>Colombia</li>
+              <li>Innovación y gestión de recursos digitales</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-8 border-t border-border pt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2026 Repositorio UniCartagena. Proyecto académico demostrativo.
+          <p className="text-base text-muted-foreground">
+            © 2026 Repositorio REDS Colombia. Proyecto académico demostrativo.
           </p>
         </div>
       </div>

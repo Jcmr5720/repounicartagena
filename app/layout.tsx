@@ -12,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Repositorio UniCartagena",
+  title: "Repositorio REDS Colombia",
   description:
-    "Repositorio de recursos digitales (REDS) de la Universidad de Cartagena",
+    "Repositorio de recursos digitales (REDS) de REDS Colombia",
   generator: "v0.app",
   icons: {
     icon: [

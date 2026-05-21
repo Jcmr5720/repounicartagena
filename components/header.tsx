@@ -37,18 +37,18 @@ export function Header() {
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
               <Image
-                src="/images/logo-unicartagena.png"
-                alt="Universidad de Cartagena"
+                src="/images/logo.png"
+                alt="Repositorio REDS Colombia"
                 width={48}
                 height={48}
                 className="h-12 w-auto"
               />
               <div className="flex flex-col">
                 <span className="text-left text-lg font-bold text-foreground">
-                  Repositorio UniCartagena
+                  Repositorio REDS Colombia
                 </span>
-                <span className="hidden text-xs text-muted-foreground sm:block">
-                  Repositorio de recursos digitales (REDS)
+                <span className="hidden text-sm text-muted-foreground sm:block">
+                  Recursos digitales para Colombia
                 </span>
               </div>
             </Link>
@@ -58,7 +58,7 @@ export function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
                     isActive(item.href)
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -70,7 +70,7 @@ export function Header() {
               {user?.role === "admin" && (
                 <Link
                   href="/admin"
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
                     isActive("/admin")
                       ? "bg-primary/10 text-primary"
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
@@ -86,7 +86,7 @@ export function Header() {
                 <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
               ) : user ? (
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-sm text-foreground">
+                  <span className="flex items-center gap-1 text-base text-foreground">
                     <User className="h-4 w-4" />
                     {user.username}
                   </span>

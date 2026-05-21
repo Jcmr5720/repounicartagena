@@ -22,7 +22,7 @@ export function PublicationsSection() {
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
               Recursos digitales recientes
             </h2>
-            <p className="mt-1 text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Descubre los últimos recursos digitales publicados por la comunidad
             </p>
           </div>
@@ -34,7 +34,7 @@ export function PublicationsSection() {
             <h3 className="mt-4 font-semibold text-foreground">
               No se encontraron recursos digitales
             </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mt-2 text-base text-muted-foreground">
               Aun no hay recursos digitales en el repositorio
             </p>
           </div>
@@ -62,12 +62,12 @@ export function PublicationsSection() {
                   </h3>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col pb-4">
-                  <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mb-3 flex items-center gap-2 text-base text-muted-foreground">
                     <User className="h-4 w-4" />
                     <span className="truncate">{publication.autor}</span>
                   </div>
 
-                  <p className="mb-4 line-clamp-3 flex-1 text-sm text-muted-foreground">
+                  <p className="mb-4 line-clamp-3 flex-1 text-base text-muted-foreground">
                     {publication.resumen}
                   </p>
 
@@ -85,7 +85,7 @@ export function PublicationsSection() {
                   </div>
 
                   <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       {new Date(publication.fechaPublicacion).toLocaleDateString(
                         "es-CO",

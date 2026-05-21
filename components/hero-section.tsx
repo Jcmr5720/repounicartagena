@@ -28,7 +28,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           {/* Badge */}
           <div className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary">
             <span className="mr-2 h-2 w-2 rounded-full bg-primary" />
-            Repositorio de Recursos Digitales
+            Repositorio REDS Colombia
           </div>
 
           {/* Title */}
@@ -40,7 +40,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           {/* Subtitle */}
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
             Un espacio digital para reunir recursos digitales, informes,
-            guias y materiales desarrollados por la comunidad UniCartagena.
+            guias y materiales desarrollados por la comunidad de REDS Colombia.
           </p>
 
           {/* Search Form */}

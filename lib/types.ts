@@ -22,24 +22,24 @@ export interface Publication {
 
 export const MOCK_USERS: Record<string, { password: string; user: User }> = {
   admin: {
-    password: "hola123",
-    user: {
-      username: "admin",
-      role: "admin",
-      email: "admin@unicartagena.edu.co",
-      programa: "Administración del Sistema",
-      telefono: "+57 300 123 4567",
-    },
+      password: "hola123",
+      user: {
+        username: "admin",
+        role: "admin",
+        email: "admin@redscolombia.co",
+        programa: "Administración del Sistema",
+        telefono: "+57 300 123 4567",
+      },
   },
   prueba: {
-    password: "hola123",
-    user: {
-      username: "prueba",
-      role: "estudiante",
-      email: "prueba@unicartagena.edu.co",
-      programa: "Ingeniería de Sistemas",
-      telefono: "+57 311 987 6543",
-    },
+      password: "hola123",
+      user: {
+        username: "prueba",
+        role: "estudiante",
+        email: "prueba@redscolombia.co",
+        programa: "Ingeniería de Sistemas",
+        telefono: "+57 311 987 6543",
+      },
   },
 };
 
@@ -136,7 +136,7 @@ export const UPDATES = [
   },
   {
     id: "4",
-    titulo: "Repositorio UniCartagena inicia su fase piloto",
+    titulo: "Repositorio REDS Colombia inicia su fase piloto",
     fecha: "Marzo 2026",
   },
 ];

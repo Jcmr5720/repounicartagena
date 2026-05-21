@@ -114,7 +114,7 @@ function AccountForm({ user }: { user: User }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="correo@unicartagena.edu.co"
+              placeholder="correo@redscolombia.co"
             />
           </div>
 

@@ -60,7 +60,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
-            Repositorio UniCartagena
+            Repositorio REDS Colombia
           </DialogTitle>
         </DialogHeader>
 
@@ -156,7 +156,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               </h3>
               <p className="text-sm text-muted-foreground">
                 El registro se encuentra temporalmente cerrado. Solicita acceso
-                al administrador del repositorio.
+                al administrador de Repositorio REDS Colombia.
               </p>
             </div>
           </div>
