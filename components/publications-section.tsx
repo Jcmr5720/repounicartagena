@@ -1,26 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Calendar, User, Tag, FileText, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { usePublications } from "@/lib/publications-context";
-import { Publication } from "@/lib/types";
 
-interface PublicationsSectionProps {
-  onViewDetail: (publication: Publication) => void;
-  searchQuery?: string;
-}
+export function PublicationsSection() {
+  const { publications } = usePublications();
 
-export function PublicationsSection({
-  onViewDetail,
-  searchQuery,
-}: PublicationsSectionProps) {
-  const { publications, searchPublications } = usePublications();
-
-  const displayedPublications = searchQuery
-    ? searchPublications(searchQuery)
-    : publications.filter((p) => p.estado === "publicado").slice(0, 6);
+  const displayedPublications = publications
+    .filter((p) => p.estado === "publicado")
+    .slice(0, 6);
 
   return (
     <section className="bg-muted/30 py-16">
@@ -28,14 +20,10 @@ export function PublicationsSection({
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
-              {searchQuery
-                ? `Resultados para "${searchQuery}"`
-                : "Publicaciones recientes"}
+              Publicaciones recientes
             </h2>
             <p className="mt-1 text-muted-foreground">
-              {searchQuery
-                ? `${displayedPublications.length} resultado(s) encontrado(s)`
-                : "Descubre los últimos proyectos publicados por estudiantes"}
+              Descubre los últimos proyectos publicados por estudiantes
             </p>
           </div>
         </div>
@@ -47,9 +35,7 @@ export function PublicationsSection({
               No se encontraron publicaciones
             </h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              {searchQuery
-                ? "Intenta con otros términos de búsqueda"
-                : "Aún no hay publicaciones en el repositorio"}
+              Aún no hay publicaciones en el repositorio
             </p>
           </div>
         ) : (
@@ -111,13 +97,15 @@ export function PublicationsSection({
                       )}
                     </div>
                     <Button
+                      asChild
                       variant="ghost"
                       size="sm"
                       className="gap-1 text-primary hover:text-primary"
-                      onClick={() => onViewDetail(publication)}
                     >
-                      Ver detalle
-                      <ArrowRight className="h-4 w-4" />
+                      <Link href={`/publicaciones/${publication.id}`}>
+                        Ver detalle
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

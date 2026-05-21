@@ -14,18 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { PROGRAMAS_ACADEMICOS } from "@/lib/types";
+import { PROGRAMAS_ACADEMICOS, type User } from "@/lib/types";
+import { AuthModal } from "./auth-modal";
 
-interface AccountPageProps {
-  onOpenAuthModal: () => void;
-}
-
-export function AccountPage({ onOpenAuthModal }: AccountPageProps) {
-  const { user, updateUser, isLoading } = useAuth();
-  const [email, setEmail] = useState(user?.email || "");
-  const [programa, setPrograma] = useState(user?.programa || "");
-  const [telefono, setTelefono] = useState(user?.telefono || "");
-  const [saved, setSaved] = useState(false);
+export function AccountPage() {
+  const { user, isLoading } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -37,24 +31,39 @@ export function AccountPage({ onOpenAuthModal }: AccountPageProps) {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
-        <Card className="border-border">
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <User className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h2 className="mb-2 text-xl font-semibold text-foreground">
-              Acceso requerido
-            </h2>
-            <p className="mb-6 text-muted-foreground">
-              Debes iniciar sesión para acceder a tu cuenta.
-            </p>
-            <Button onClick={onOpenAuthModal}>Iniciar sesión</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+          <Card className="border-border">
+            <CardContent className="p-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <User className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="mb-2 text-xl font-semibold text-foreground">
+                Acceso requerido
+              </h2>
+              <p className="mb-6 text-muted-foreground">
+                Debes iniciar sesión para acceder a tu cuenta.
+              </p>
+              <Button onClick={() => setAuthModalOpen(true)}>
+                Iniciar sesión
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      </>
     );
   }
+
+  return <AccountForm key={user.username} user={user} />;
+}
+
+function AccountForm({ user }: { user: User }) {
+  const { updateUser } = useAuth();
+  const [email, setEmail] = useState(user.email);
+  const [programa, setPrograma] = useState(user.programa);
+  const [telefono, setTelefono] = useState(user.telefono);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     updateUser({ email, programa, telefono });
@@ -79,7 +88,6 @@ export function AccountPage({ onOpenAuthModal }: AccountPageProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Username and Role - Read only */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label className="text-muted-foreground">Usuario</Label>
@@ -96,7 +104,6 @@ export function AccountPage({ onOpenAuthModal }: AccountPageProps) {
             </div>
           </div>
 
-          {/* Editable fields */}
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2">
               <Mail className="h-4 w-4" />

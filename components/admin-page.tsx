@@ -35,11 +35,15 @@ import { usePublications } from "@/lib/publications-context";
 
 export function AdminPage() {
   const { user, isLoading } = useAuth();
-  const { publications, updatePublication, deletePublication } =
-    usePublications();
+  const {
+    publications,
+    updatePublication,
+    deletePublication,
+    isLoading: publicationsLoading,
+  } = usePublications();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  if (isLoading) {
+  if (isLoading || publicationsLoading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="h-96 animate-pulse rounded-lg bg-muted" />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { Search, Filter, X, Calendar, User, Tag, ArrowRight, FileText } from "lucide-react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,19 +15,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePublications } from "@/lib/publications-context";
-import { Publication, PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS } from "@/lib/types";
+import { PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS, type Publication } from "@/lib/types";
 
 interface ExplorePageProps {
-  onViewDetail: (publication: Publication) => void;
   initialSearch?: string;
 }
 
-export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePageProps) {
-  const { publications } = usePublications();
+export function ExplorePage({ initialSearch = "" }: ExplorePageProps) {
+  const { publications, isLoading } = usePublications();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="h-96 animate-pulse rounded-lg bg-muted" />
+        </div>
+      </div>
+    );
+  }
+
+  return <ExploreContent key={initialSearch} initialSearch={initialSearch} publications={publications} />;
+}
+
+function ExploreContent({
+  initialSearch,
+  publications,
+}: {
+  initialSearch: string;
+  publications: Publication[];
+}) {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [programaFilter, setProgramaFilter] = useState<string>("");
   const [lineaFilter, setLineaFilter] = useState<string>("");
-  const [añoFilter, setAñoFilter] = useState<string>("");
+  const [anioFilter, setAnioFilter] = useState<string>("");
 
   const filteredPublications = publications.filter((pub) => {
     const matchesSearch =
@@ -37,28 +58,31 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
         kw.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
-    const matchesPrograma =
-      !programaFilter || pub.programa === programaFilter;
-    const matchesLinea =
-      !lineaFilter || pub.lineaTematica === lineaFilter;
-    const matchesAño =
-      !añoFilter || pub.año.toString() === añoFilter;
+    const matchesPrograma = !programaFilter || pub.programa === programaFilter;
+    const matchesLinea = !lineaFilter || pub.lineaTematica === lineaFilter;
+    const matchesAnio = !anioFilter || pub.año.toString() === anioFilter;
 
-    return matchesSearch && matchesPrograma && matchesLinea && matchesAño && pub.estado === "publicado";
+    return (
+      matchesSearch &&
+      matchesPrograma &&
+      matchesLinea &&
+      matchesAnio &&
+      pub.estado === "publicado"
+    );
   });
 
   const clearFilters = () => {
     setSearchQuery("");
     setProgramaFilter("");
     setLineaFilter("");
-    setAñoFilter("");
+    setAnioFilter("");
   };
 
-  const hasFilters = searchQuery || programaFilter || lineaFilter || añoFilter;
+  const hasFilters = searchQuery || programaFilter || lineaFilter || anioFilter;
 
-  const years = Array.from(
-    new Set(publications.map((p) => p.año))
-  ).sort((a, b) => b - a);
+  const years = Array.from(new Set(publications.map((p) => p.año))).sort(
+    (a, b) => b - a
+  );
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -72,7 +96,6 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
           </p>
         </div>
 
-        {/* Search and Filters */}
         <div className="mb-8 space-y-4">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -117,7 +140,7 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
               </SelectContent>
             </Select>
 
-            <Select value={añoFilter} onValueChange={setAñoFilter}>
+            <Select value={anioFilter} onValueChange={setAnioFilter}>
               <SelectTrigger className="w-28">
                 <SelectValue placeholder="Año" />
               </SelectTrigger>
@@ -172,10 +195,10 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
                   </button>
                 </Badge>
               )}
-              {añoFilter && (
+              {anioFilter && (
                 <Badge variant="secondary" className="gap-1">
-                  {añoFilter}
-                  <button onClick={() => setAñoFilter("")}>
+                  {anioFilter}
+                  <button onClick={() => setAnioFilter("")}>
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
@@ -184,12 +207,10 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
           )}
         </div>
 
-        {/* Results count */}
         <p className="mb-6 text-sm text-muted-foreground">
           {filteredPublications.length} publicación(es) encontrada(s)
         </p>
 
-        {/* Publications grid */}
         {filteredPublications.length === 0 ? (
           <div className="rounded-lg border border-border bg-muted/30 p-12 text-center">
             <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
@@ -259,13 +280,15 @@ export function ExplorePage({ onViewDetail, initialSearch = "" }: ExplorePagePro
                       )}
                     </div>
                     <Button
+                      asChild
                       variant="ghost"
                       size="sm"
                       className="gap-1 text-primary hover:text-primary"
-                      onClick={() => onViewDetail(publication)}
                     >
-                      Ver detalle
-                      <ArrowRight className="h-4 w-4" />
+                      <Link href={`/publicaciones/${publication.id}`}>
+                        Ver detalle
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

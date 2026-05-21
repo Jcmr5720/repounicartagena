@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,10 +71,13 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           </form>
 
           {/* Advanced search link */}
-          <button className="mt-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary">
+          <Link
+            href="/explorar"
+            className="mt-4 inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-primary"
+          >
             Búsqueda avanzada
             <ChevronRight className="ml-1 h-4 w-4" />
-          </button>
+          </Link>
 
           {/* Stats */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-8">

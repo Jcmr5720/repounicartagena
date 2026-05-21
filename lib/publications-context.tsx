@@ -5,6 +5,7 @@ import { Publication, INITIAL_PUBLICATIONS } from "./types";
 
 interface PublicationsContextType {
   publications: Publication[];
+  isLoading: boolean;
   addPublication: (publication: Omit<Publication, "id" | "fechaPublicacion">) => void;
   updatePublication: (id: string, updates: Partial<Publication>) => void;
   deletePublication: (id: string) => void;
@@ -16,6 +17,7 @@ const PublicationsContext = createContext<PublicationsContextType | undefined>(u
 
 export function PublicationsProvider({ children }: { children: ReactNode }) {
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const savedPublications = localStorage.getItem("repositorio_publications");
@@ -30,6 +32,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       setPublications(INITIAL_PUBLICATIONS);
       localStorage.setItem("repositorio_publications", JSON.stringify(INITIAL_PUBLICATIONS));
     }
+    setIsLoading(false);
   }, []);
 
   const savePublications = (pubs: Publication[]) => {
@@ -78,6 +81,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     <PublicationsContext.Provider
       value={{
         publications,
+        isLoading,
         addPublication,
         updatePublication,
         deletePublication,

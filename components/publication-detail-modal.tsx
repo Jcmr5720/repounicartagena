@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Download, Calendar, User, Tag, BookOpen, FileText } from "lucide-react";
+import { Download, Calendar, User, Tag, BookOpen, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Upload,
   FileText,
@@ -24,15 +24,13 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { usePublications } from "@/lib/publications-context";
 import { PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS } from "@/lib/types";
+import { AuthModal } from "./auth-modal";
 
-interface UploadPageProps {
-  onOpenAuthModal: () => void;
-}
-
-export function UploadPage({ onOpenAuthModal }: UploadPageProps) {
+export function UploadPage() {
   const { user, isLoading } = useAuth();
   const { addPublication } = usePublications();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     titulo: "",
@@ -59,22 +57,27 @@ export function UploadPage({ onOpenAuthModal }: UploadPageProps) {
 
   if (!user) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <Card className="border-border">
-          <CardContent className="p-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-              <User className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h2 className="mb-2 text-xl font-semibold text-foreground">
-              Acceso requerido
-            </h2>
-            <p className="mb-6 text-muted-foreground">
-              Debes iniciar sesión para subir un proyecto.
-            </p>
-            <Button onClick={onOpenAuthModal}>Iniciar sesión</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <>
+        <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+          <Card className="border-border">
+            <CardContent className="p-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <User className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="mb-2 text-xl font-semibold text-foreground">
+                Acceso requerido
+              </h2>
+              <p className="mb-6 text-muted-foreground">
+                Debes iniciar sesión para subir un proyecto.
+              </p>
+              <Button onClick={() => setAuthModalOpen(true)}>
+                Iniciar sesión
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      </>
     );
   }
 
@@ -94,7 +97,6 @@ export function UploadPage({ onOpenAuthModal }: UploadPageProps) {
     setIsSubmitting(true);
     setSubmitStatus(null);
 
-    // Simulate upload delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
@@ -293,7 +295,6 @@ export function UploadPage({ onOpenAuthModal }: UploadPageProps) {
               </p>
             </div>
 
-            {/* File upload */}
             <div className="space-y-2">
               <Label>Archivo PDF *</Label>
               <div
