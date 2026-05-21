@@ -8,7 +8,6 @@ import { Footer } from "@/components/footer";
 import { HeroSection } from "@/components/hero-section";
 import { QuickAccessCards } from "@/components/quick-access-cards";
 import { PublicationsSection } from "@/components/publications-section";
-import { UpdatesSection } from "@/components/updates-section";
 import { AccountPage } from "@/components/account-page";
 import { UploadPage } from "@/components/upload-page";
 import { AdminPage } from "@/components/admin-page";
@@ -63,7 +62,6 @@ function RepositorioApp() {
             <HeroSection onSearch={handleSearch} />
             <QuickAccessCards onNavigate={handleNavigate} />
             <PublicationsSection onViewDetail={handleViewDetail} />
-            <UpdatesSection />
           </>
         );
     }
