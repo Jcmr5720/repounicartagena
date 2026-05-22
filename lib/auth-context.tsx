@@ -12,6 +12,7 @@ import type {
   User as SupabaseAuthUser,
 } from "@supabase/supabase-js";
 import { useSupabase } from "@/lib/supabase/provider";
+import { getSupabaseMissingEnvMessage } from "@/lib/supabase/client";
 import type { CartagenaUsuarioUsuario, User } from "./types";
 
 interface AuthResult {
@@ -40,6 +41,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_STORAGE_KEY = "reds_colombia_user";
 const LEGACY_USER_STORAGE_KEY = ["repo", "sitorio_user"].join("");
+const SUPABASE_NOT_CONFIGURED_ERROR = getSupabaseMissingEnvMessage();
 
 function normalizeText(value: string) {
   return value.trim();
@@ -126,12 +128,16 @@ function normalizeAuthError(message: string) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useSupabase();
-  const auth = supabase.auth;
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadProfile = useCallback(
     async (sessionUser: SupabaseAuthUser | null) => {
+      if (!supabase) {
+        setUser(null);
+        return;
+      }
+
       if (!sessionUser) {
         setUser(null);
         return;
@@ -153,7 +159,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    if (!supabase) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
     let isMounted = true;
+    const auth = supabase.auth;
 
     const initializeAuth = async () => {
       const {
@@ -181,9 +194,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [auth, loadProfile]);
+  }, [supabase, loadProfile]);
 
   const login = async (identifier: string, password: string): Promise<AuthResult> => {
+    if (!supabase) {
+      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+    }
+
+    const auth = supabase.auth;
     const trimmedIdentifier = normalizeText(identifier);
     const email = trimmedIdentifier.includes("@")
       ? trimmedIdentifier.toLowerCase()
@@ -211,6 +229,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     usuario,
     password,
   }: RegisterInput): Promise<AuthResult> => {
+    if (!supabase) {
+      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+    }
+
+    const auth = supabase.auth;
     const normalizedNombre = normalizeText(nombre);
     const normalizedEmail = normalizeText(email).toLowerCase();
     const normalizedUsuario = normalizeUsername(usuario);
@@ -248,6 +271,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (
     nextPath = "/",
   ): Promise<AuthResult> => {
+    if (!supabase) {
+      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+    }
+
+    const auth = supabase.auth;
     const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`;
 
     const { error } = await auth.signInWithOAuth({
@@ -265,6 +293,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    if (!supabase) {
+      setUser(null);
+      return;
+    }
+
+    const auth = supabase.auth;
     const { error } = await auth.signOut();
 
     if (error) {
@@ -277,6 +311,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = async (userData: Partial<User>): Promise<AuthResult> => {
+    if (!supabase) {
+      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
+    }
+
+    const auth = supabase.auth;
     const {
       data: { user: authUser },
       error: authUserError,

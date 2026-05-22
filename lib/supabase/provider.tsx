@@ -4,7 +4,7 @@ import { createContext, useContext } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "./client";
 
-const SupabaseContext = createContext<SupabaseClient | undefined>(undefined);
+const SupabaseContext = createContext<SupabaseClient | null | undefined>(undefined);
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   return (
