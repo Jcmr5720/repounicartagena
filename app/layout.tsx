@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import { Providers } from "./providers";
+import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
 
 const inter = Inter({
@@ -44,11 +43,7 @@ export default function RootLayout({
     <html lang="es" className="bg-background">
       <body className={`${inter.variable} min-h-screen bg-background font-sans antialiased text-foreground`}>
         <Providers>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <SiteShell>{children}</SiteShell>
         </Providers>
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import {
   Upload,
   FileText,
@@ -24,13 +25,11 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { usePublications } from "@/lib/publications-context";
 import { PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS } from "@/lib/types";
-import { AuthModal } from "./auth-modal";
 
 export function UploadPage() {
   const { user, isLoading } = useAuth();
   const { addPublication } = usePublications();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     titulo: "",
@@ -70,13 +69,12 @@ export function UploadPage() {
               <p className="mb-6 text-muted-foreground">
                 Debes iniciar sesión para subir un recurso digital.
               </p>
-              <Button onClick={() => setAuthModalOpen(true)}>
-                Iniciar sesión
+              <Button asChild>
+                <Link href="/auth">Iniciar sesión</Link>
               </Button>
             </CardContent>
           </Card>
         </div>
-        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       </>
     );
   }

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "supabase:init": "supabase init",
+    "supabase:start": "supabase start",
+    "supabase:status": "supabase status",
+    "supabase:link": "supabase link --project-ref kmciqqeqhgqpauzhvrag",
+    "supabase:db-push": "supabase db push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -38,6 +43,7 @@
     "@radix-ui/react-toggle-group": "1.1.11",
     "@radix-ui/react-tooltip": "1.2.8",
     "@vercel/analytics": "1.6.1",
+    "@supabase/supabase-js": "^2.106.1",
     "autoprefixer": "^10.4.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -67,6 +73,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",
     "postcss": "^8.5",
+    "supabase": "^2.98.2",
     "tailwindcss": "^4.2.0",
     "tw-animate-css": "1.3.3",
     "typescript": "5.7.3"

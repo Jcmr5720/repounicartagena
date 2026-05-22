@@ -1,9 +1,19 @@
 export interface User {
+  nombre?: string;
   username: string;
   role: "admin" | "estudiante";
   email: string;
   programa: string;
   telefono: string;
+}
+
+export interface CartagenaUsuarioUsuario {
+  id: string;
+  nombre: string;
+  correo: string;
+  usuario: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Publication {

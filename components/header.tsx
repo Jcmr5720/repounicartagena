@@ -7,11 +7,9 @@ import { usePathname } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { AuthModal } from "./auth-modal";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
 
@@ -101,8 +99,8 @@ export function Header() {
                   </Button>
                 </div>
               ) : (
-                <Button onClick={() => setAuthModalOpen(true)}>
-                  Iniciar sesión
+                <Button asChild>
+                  <Link href="/auth">Iniciar sesión</Link>
                 </Button>
               )}
             </div>
@@ -168,14 +166,10 @@ export function Header() {
                     </Button>
                   </div>
                 ) : (
-                  <Button
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setMobileMenuOpen(false);
-                    }}
-                    className="ml-3"
-                  >
-                    Iniciar sesión
+                  <Button asChild className="ml-3">
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      Iniciar sesión
+                    </Link>
                   </Button>
                 )}
               </div>
@@ -183,8 +177,6 @@ export function Header() {
           </div>
         )}
       </header>
-
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </>
   );
 }

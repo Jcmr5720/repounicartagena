@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { User, Mail, Phone, BookOpen, Save, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,8 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
 import { PROGRAMAS_ACADEMICOS, type User } from "@/lib/types";
-import { AuthModal } from "./auth-modal";
-
 export function AccountPage() {
   const { user, isLoading } = useAuth();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -44,13 +42,12 @@ export function AccountPage() {
               <p className="mb-6 text-muted-foreground">
                 Debes iniciar sesión para acceder a tu cuenta.
               </p>
-              <Button onClick={() => setAuthModalOpen(true)}>
-                Iniciar sesión
+              <Button asChild>
+                <Link href="/auth">Iniciar sesión</Link>
               </Button>
             </CardContent>
           </Card>
         </div>
-        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       </>
     );
   }
@@ -64,10 +61,23 @@ function AccountForm({ user }: { user: User }) {
   const [programa, setPrograma] = useState(user.programa);
   const [telefono, setTelefono] = useState(user.telefono);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
-    updateUser({ email, programa, telefono });
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError("");
+
+    const result = await updateUser({ email, programa, telefono });
+
+    if (!result.success) {
+      setSaveError(result.error || "No se pudieron guardar los cambios");
+      setIsSaving(false);
+      return;
+    }
+
     setSaved(true);
+    setIsSaving(false);
     setTimeout(() => setSaved(false), 3000);
   };
 
@@ -152,14 +162,19 @@ function AccountForm({ user }: { user: User }) {
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-6">
-            {saved && (
-              <span className="text-sm text-green-600">
-                Cambios guardados correctamente
-              </span>
-            )}
-            <Button onClick={handleSave} className="ml-auto gap-2">
+            <div className="space-y-1">
+              {saved && (
+                <span className="text-sm text-green-600">
+                  Cambios guardados correctamente
+                </span>
+              )}
+              {saveError && (
+                <span className="text-sm text-destructive">{saveError}</span>
+              )}
+            </div>
+            <Button onClick={handleSave} className="ml-auto gap-2" disabled={isSaving}>
               <Save className="h-4 w-4" />
-              Guardar cambios
+              {isSaving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </CardContent>
