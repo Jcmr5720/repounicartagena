@@ -54,13 +54,13 @@ export function AuthPage() {
     const result = await login(loginForm.identifier, loginForm.password);
 
     if (result.success) {
-      setSuccess("Sesión iniciada correctamente.");
+      setSuccess("Sesion iniciada correctamente.");
       setIsSubmitting(false);
       router.replace(nextPath);
       return;
     }
 
-    setError(result.error || "No se pudo iniciar sesión.");
+    setError(result.error || "No se pudo iniciar sesion.");
     setIsSubmitting(false);
   };
 
@@ -70,7 +70,7 @@ export function AuthPage() {
     setSuccess("");
 
     if (registerForm.password !== registerForm.confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError("Las contrasenas no coinciden.");
       return;
     }
 
@@ -108,7 +108,7 @@ export function AuthPage() {
     const result = await loginWithGoogle(nextPath);
 
     if (!result.success) {
-      setError(result.error || "No se pudo iniciar sesión con Google.");
+      setError(result.error || "No se pudo iniciar sesion con Google.");
       setIsSubmitting(false);
     }
   };
@@ -118,7 +118,7 @@ export function AuthPage() {
       <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(15,118,110,0.18),_transparent_35%),linear-gradient(135deg,_#06131a_0%,_#0c1f26_48%,_#112932_100%)] px-4 text-slate-100">
         <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm shadow-2xl backdrop-blur">
           <Sparkles className="h-5 w-5 animate-pulse text-emerald-300" />
-          Cargando autenticación...
+          Cargando...
         </div>
       </div>
     );
@@ -131,7 +131,10 @@ export function AuthPage() {
 
       <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="space-y-6">
-          <Link href="/" className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur hover:bg-white/10">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 backdrop-blur hover:bg-white/10"
+          >
             <CircleUserRound className="h-4 w-4 text-emerald-300" />
             Repositorio REDS Colombia
           </Link>
@@ -139,34 +142,29 @@ export function AuthPage() {
           <div className="max-w-xl space-y-4">
             <p className="inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-200">
               <Sparkles className="h-3.5 w-3.5" />
-              Auth con Supabase
+              Registro sencillo
             </p>
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Accede con tu correo, registro simple y Google en un solo lugar.
+              Crea tu cuenta gratis y empieza en minutos.
             </h1>
             <p className="max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-              Esta pantalla conecta directamente con Supabase Auth y deja un
-              respaldo seguro de tu perfil no sensible en la tabla
-              <span className="font-semibold text-slate-100">
-                {" "}
-                cartagena_usuario_usuario
-              </span>
-              .
+              Unete con tu correo o entra con Google y empieza a usar el
+              repositorio sin complicaciones.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
             <FeaturePill
-              title="Registro rápido"
-              description="Nombre, correo y usuario."
+              title="Registro rapido"
+              description="Solo unos datos para empezar."
             />
             <FeaturePill
-              title="Google OAuth"
-              description="Un clic y listo."
+              title="Google"
+              description="Entra con un clic."
             />
             <FeaturePill
-              title="Respaldo limpio"
-              description="Sin contraseñas ni datos sensibles."
+              title="Perfil seguro"
+              description="Tu informacion queda protegida."
             />
           </div>
         </section>
@@ -175,17 +173,15 @@ export function AuthPage() {
           <CardContent className="space-y-6 p-6 sm:p-8">
             <div className="space-y-2">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                {mode === "login" ? "Bienvenido de nuevo" : "Unete ahora"}
               </p>
               <h2 className="text-2xl font-bold text-slate-950">
-                {mode === "login"
-                  ? "Entra con tu cuenta"
-                  : "Regístrate en segundos"}
+                {mode === "login" ? "Entra con tu cuenta" : "Crea tu cuenta gratis"}
               </h2>
               <p className="text-sm text-slate-600">
                 {mode === "login"
-                  ? "Usa tu correo y contraseña. Si entras con Google, tu perfil se sincroniza automáticamente."
-                  : "El respaldo se creará en la base de datos sin guardar tu contraseña."}
+                  ? "Usa tu correo y contrasena para entrar al repositorio."
+                  : "Completa el formulario y empieza a explorar sin demora."}
               </p>
             </div>
 
@@ -203,7 +199,7 @@ export function AuthPage() {
                     : "text-slate-600 hover:text-slate-950"
                 }`}
               >
-                Iniciar sesión
+                Iniciar sesion
               </button>
               <button
                 type="button"
@@ -266,13 +262,13 @@ export function AuthPage() {
                   fill="#EA4335"
                 />
               </svg>
-              Continuar con Google
+              Continua con Google
             </Button>
 
             {mode === "login" ? (
               <form className="space-y-4" onSubmit={handleLogin}>
                 <div className="space-y-2">
-                  <Label htmlFor="login-identifier">Correo o usuario</Label>
+                  <Label htmlFor="login-identifier">Correo</Label>
                   <Input
                     id="login-identifier"
                     type="text"
@@ -284,13 +280,13 @@ export function AuthPage() {
                         identifier: event.target.value,
                       }))
                     }
-                    placeholder="tu@correo.com o tu_usuario"
+                    placeholder="tu@correo.com"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Contraseña</Label>
+                  <Label htmlFor="login-password">Contrasena</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -302,7 +298,7 @@ export function AuthPage() {
                         password: event.target.value,
                       }))
                     }
-                    placeholder="Ingresa tu contraseña"
+                    placeholder="Ingresa tu contrasena"
                     required
                   />
                 </div>
@@ -373,7 +369,7 @@ export function AuthPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="register-password">Contraseña</Label>
+                  <Label htmlFor="register-password">Contrasena</Label>
                   <Input
                     id="register-password"
                     type="password"
@@ -385,14 +381,14 @@ export function AuthPage() {
                         password: event.target.value,
                       }))
                     }
-                    placeholder="Crea una contraseña segura"
+                    placeholder="Crea una contrasena segura"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="register-confirm-password">
-                    Confirmar contraseña
+                    Confirmar contrasena
                   </Label>
                   <Input
                     id="register-confirm-password"
@@ -405,7 +401,7 @@ export function AuthPage() {
                         confirmPassword: event.target.value,
                       }))
                     }
-                    placeholder="Repite tu contraseña"
+                    placeholder="Repite tu contrasena"
                     required
                   />
                 </div>
@@ -422,7 +418,15 @@ export function AuthPage() {
             )}
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-              ¿Necesitas volver al sitio principal?{" "}
+              ¿Ya tienes cuenta?{" "}
+              <button
+                type="button"
+                onClick={() => setMode("login")}
+                className="font-semibold text-emerald-700 hover:underline"
+              >
+                Inicia sesion
+              </button>
+              {" "}o vuelve al sitio principal.{" "}
               <Link href="/" className="font-semibold text-emerald-700 hover:underline">
                 Ir al inicio
               </Link>
@@ -442,7 +446,7 @@ function FeaturePill({
   description: string;
 }) {
   return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-100 shadow-lg backdrop-blur">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-slate-100 shadow-lg backdrop-blur">
       <p className="font-semibold text-white">{title}</p>
       <p className="mt-1 text-sm leading-6 text-slate-300">{description}</p>
     </div>

@@ -21,7 +21,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
-            Autenticación en /auth
+            Accede a tu cuenta
           </DialogTitle>
         </DialogHeader>
 
@@ -30,11 +30,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             <AlertCircle className="h-6 w-6 text-primary" />
           </div>
           <p className="text-sm text-muted-foreground">
-            El formulario de acceso y registro ahora vive en una página
-            dedicada para soportar Supabase Auth y Google.
+            El registro y el acceso ahora estan en una pagina dedicada para que
+            puedas entrar de forma mas rapida y sencilla.
           </p>
           <Button asChild className="w-full">
-            <Link href="/auth">Ir a autenticación</Link>
+            <Link href="/auth">Ir al formulario</Link>
           </Button>
         </div>
       </DialogContent>
