@@ -138,7 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         readMetadataValue(metadata, ["nombre", "full_name", "name"]) ||
         fallbackUsername;
 
-      const { error } = await supabase.from("profiles").upsert(
+      const { error } = await supabase.from("cartagena_usuario_usuario").upsert(
         {
           id: sessionUser.id,
           email: fallbackEmail,
@@ -164,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const { data, error } = await supabase
-        .from("profiles")
+        .from("cartagena_usuario_usuario")
         .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
         .eq("id", sessionUser.id)
         .maybeSingle();
@@ -176,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!data) {
         await ensureProfile(sessionUser);
         const { data: fallbackProfile } = await supabase
-          .from("profiles")
+          .from("cartagena_usuario_usuario")
           .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
           .eq("id", sessionUser.id)
           .maybeSingle();
@@ -371,7 +371,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error } = await supabase
-      .from("profiles")
+      .from("cartagena_usuario_usuario")
       .update({
         email: nextEmail || authUser.email || "",
         full_name: nextNombre,
@@ -404,7 +404,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const { error } = await supabase
-      .from("profiles")
+      .from("cartagena_usuario_usuario")
       .update({ role })
       .eq("id", userId);
 

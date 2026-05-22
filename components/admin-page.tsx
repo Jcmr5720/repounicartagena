@@ -45,7 +45,7 @@ export function AdminPage() {
     const loadProfiles = async () => {
       setProfilesLoading(true);
       const { data, error } = await supabase
-        .from("profiles")
+        .from("cartagena_usuario_usuario")
         .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
         .order("created_at", { ascending: false });
 
@@ -115,7 +115,7 @@ export function AdminPage() {
     }
 
     const { data, error } = await supabase
-      .from("profiles")
+      .from("cartagena_usuario_usuario")
       .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
       .order("created_at", { ascending: false });
 

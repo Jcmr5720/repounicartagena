@@ -8,7 +8,7 @@ La idea principal es que el acceso a funciones no dependa de metadata de Auth ni
 ## Fuente de verdad
 
 - `auth.users`: maneja credenciales, sesión y autenticación.
-- `public.profiles`: maneja el perfil extendido y el rol real del usuario.
+- `public.cartagena_usuario_usuario`: maneja el perfil extendido y el rol real del usuario.
 
 ## Roles
 
@@ -28,14 +28,14 @@ La idea principal es que el acceso a funciones no dependa de metadata de Auth ni
 
 1. El usuario completa el formulario de registro.
 2. Supabase Auth crea la cuenta.
-3. Un trigger en la base crea automáticamente el registro en `public.profiles`.
+3. Un trigger en la base crea automáticamente el registro en `public.cartagena_usuario_usuario`.
 4. El perfil queda con rol `estudiante`.
-5. La app lee el perfil desde `public.profiles` y guarda ese rol en el contexto de auth.
+5. La app lee el perfil desde `public.cartagena_usuario_usuario` y guarda ese rol en el contexto de auth.
 
 ## Flujo de inicio de sesión
 
 1. La app autentica contra Supabase Auth.
-2. Después del login, el contexto consulta `public.profiles`.
+2. Después del login, el contexto consulta `public.cartagena_usuario_usuario`.
 3. El frontend usa ese perfil para mostrar navegación, botones y restricciones.
 4. Las acciones sensibles siguen protegidas por RLS en la base.
 
@@ -59,4 +59,3 @@ Esto evita que un usuario pueda saltarse la UI e intentar operar directo sobre l
 - `lib/auth-context.tsx`
 - `lib/permissions.ts`
 - `supabase/migrations/20260522000200_roles_profiles_documents.sql`
-

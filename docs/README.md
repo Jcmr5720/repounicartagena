@@ -10,7 +10,6 @@ Este directorio resume el trabajo realizado para mover la aplicación a un model
 ## Resumen rápido
 
 - La fuente de verdad de permisos ya no depende de `user_metadata` ni de `localStorage`.
-- Los usuarios se guardan en `public.profiles`.
+- Los usuarios se guardan en `public.cartagena_usuario_usuario`.
 - Los documentos se guardan en `public.documents`.
 - Los permisos se protegen con RLS en Supabase y también se reflejan en el frontend.
-

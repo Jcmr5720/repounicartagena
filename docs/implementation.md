@@ -6,7 +6,7 @@ Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por
 
 ### Perfiles
 
-- Se adaptó la tabla de perfiles a `public.profiles`.
+- Se adaptó la tabla de perfiles a `public.cartagena_usuario_usuario`.
 - Se agregó el rol `moderador`.
 - Se creó un trigger para crear perfiles automáticamente al registrarse un usuario.
 - Se activó RLS con políticas para lectura y actualización segura.
@@ -20,7 +20,7 @@ Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por
 
 ### Frontend
 
-- El contexto de auth ahora lee el perfil desde `public.profiles`.
+- El contexto de auth ahora lee el perfil desde `public.cartagena_usuario_usuario`.
 - La navegación cambia según rol.
 - Se agregó una vista de administración para `admin`.
 - Se agregó una vista de moderación para `moderador` y `admin`.
@@ -60,7 +60,7 @@ Ese archivo incluye:
 
 - enums de rol y estado,
 - triggers de sincronización con Auth,
-- policies RLS para `profiles` y `documents`,
+- policies RLS para `cartagena_usuario_usuario` y `documents`,
 - policies del bucket de Storage `documents`.
 
 ## Verificación
@@ -73,4 +73,3 @@ Ese archivo incluye:
 - La historia de migraciones quedó alineada entre local y remoto.
 - El esquema remoto recibió la migración nueva.
 - Si el entorno local de Supabase no está levantado, la historia sigue alineada en el repo y puede aplicarse al arrancar el stack local.
-
