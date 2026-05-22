@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import {
   Upload,
@@ -9,44 +9,113 @@ import {
   CheckCircle,
   AlertCircle,
   User,
+  Edit3,
+  Trash2,
+  PlusCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth-context";
 import { usePublications } from "@/lib/publications-context";
-import { PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS } from "@/lib/types";
+import { useSupabase } from "@/lib/supabase/provider";
+import {
+  PROGRAMAS_ACADEMICOS,
+  LINEAS_TEMATICAS,
+  type Publication,
+  DOCUMENT_STATUS_LABELS,
+} from "@/lib/types";
+import {
+  canDeleteDocument,
+  canEditDocument,
+  canManageDocuments,
+} from "@/lib/permissions";
+
+type FormState = {
+  titulo: string;
+  autor: string;
+  programa: string;
+  año: string;
+  lineaTematica: string;
+  resumen: string;
+  palabrasClave: string;
+};
+
+const INITIAL_FORM: FormState = {
+  titulo: "",
+  autor: "",
+  programa: "",
+  año: new Date().getFullYear().toString(),
+  lineaTematica: "",
+  resumen: "",
+  palabrasClave: "",
+};
 
 export function UploadPage() {
   const { user, isLoading } = useAuth();
-  const { addPublication } = usePublications();
+  const {
+    publications,
+    addPublication,
+    updatePublication,
+    deletePublication,
+    isLoading: publicationsLoading,
+    refreshPublications,
+  } = usePublications();
+  const supabase = useSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
-    titulo: "",
-    autor: "",
-    programa: "",
-    año: new Date().getFullYear().toString(),
-    lineaTematica: "",
-    resumen: "",
-    palabrasClave: "",
-  });
+  const [formData, setFormData] = useState<FormState>(INITIAL_FORM);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
-    null
-  );
+  const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
+  const [message, setMessage] = useState("");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (editingPublication) {
+      setFormData({
+        titulo: editingPublication.titulo,
+        autor: editingPublication.autor,
+        programa: editingPublication.programa,
+        año: editingPublication.año.toString(),
+        lineaTematica: editingPublication.lineaTematica,
+        resumen: editingPublication.resumen,
+        palabrasClave: editingPublication.palabrasClave.join(", "),
+      });
+      setSelectedFile(null);
+      setSubmitStatus(null);
+      setMessage("");
+    }
+  }, [editingPublication]);
+
+  const manageablePublications = useMemo(() => {
+    if (!user) {
+      return [];
+    }
+
+    if (user.role === "admin") {
+      return publications;
+    }
+
+    return publications.filter((publication) => publication.owner_id === user.id);
+  }, [publications, user]);
+
+  if (isLoading || publicationsLoading) {
     return (
       <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="h-96 animate-pulse rounded-lg bg-muted" />
@@ -56,100 +125,230 @@ export function UploadPage() {
 
   if (!user) {
     return (
-      <>
-        <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-          <Card className="border-border">
-            <CardContent className="p-12 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-                <User className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <h2 className="mb-2 text-xl font-semibold text-foreground">
-                Acceso requerido
-              </h2>
-              <p className="mb-6 text-muted-foreground">
-                Debes iniciar sesión para subir un recurso digital.
-              </p>
-              <Button asChild>
-                <Link href="/auth">Iniciar sesión</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </>
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+        <Card className="border-border">
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <User className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="mb-2 text-xl font-semibold text-foreground">
+              Acceso requerido
+            </h2>
+            <p className="mb-6 text-muted-foreground">
+              Debes iniciar sesión para subir y administrar documentos.
+            </p>
+            <Button asChild>
+              <Link href="/auth">Iniciar sesión</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (!canManageDocuments(user)) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+        <Card className="border-border">
+          <CardContent className="p-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+              <ShieldAlert className="h-8 w-8 text-amber-600" />
+            </div>
+            <h2 className="mb-2 text-xl font-semibold text-foreground">
+              No tienes permisos para subir documentos
+            </h2>
+            <p className="text-muted-foreground">
+              Tu rol actual solo puede ver y moderar documentos. Si necesitas cargar contenido, pide que te asignen el rol adecuado.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const resetForm = () => {
+    setEditingPublication(null);
+    setFormData(INITIAL_FORM);
+    setSelectedFile(null);
+    setSubmitStatus(null);
+    setMessage("");
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.type === "application/pdf") {
         setSelectedFile(file);
       } else {
-        alert("Solo se permiten archivos PDF");
+        setMessage("Solo se permiten archivos PDF");
+        setSubmitStatus("error");
       }
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setMessage("");
 
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const payload = {
+      titulo: formData.titulo.trim(),
+      autor: formData.autor.trim(),
+      programa: formData.programa.trim(),
+      año: parseInt(formData.año, 10),
+      lineaTematica: formData.lineaTematica.trim(),
+      resumen: formData.resumen.trim(),
+      palabrasClave: formData.palabrasClave
+        .split(",")
+        .map((keyword) => keyword.trim())
+        .filter(Boolean),
+    };
 
     try {
-      addPublication({
-        titulo: formData.titulo,
-        autor: formData.autor,
-        programa: formData.programa,
-        año: parseInt(formData.año),
-        lineaTematica: formData.lineaTematica,
-        resumen: formData.resumen,
-        palabrasClave: formData.palabrasClave
-          .split(",")
-          .map((kw) => kw.trim())
-          .filter(Boolean),
-        estado: "publicado",
-      });
+      if (editingPublication) {
+        const updates: Partial<Publication> = {
+          title: payload.titulo,
+          titulo: payload.titulo,
+          autor: payload.autor,
+          programa: payload.programa,
+          año: payload.año,
+          lineaTematica: payload.lineaTematica,
+          description: payload.resumen,
+          resumen: payload.resumen,
+          palabrasClave: payload.palabrasClave,
+        };
 
-      setSubmitStatus("success");
-      setFormData({
-        titulo: "",
-        autor: "",
-        programa: "",
-        año: new Date().getFullYear().toString(),
-        lineaTematica: "",
-        resumen: "",
-        palabrasClave: "",
-      });
-      setSelectedFile(null);
-    } catch {
+        const updateResult = await updatePublication(editingPublication.id, updates);
+        if (!updateResult.success) {
+          throw new Error(updateResult.error || "No se pudo actualizar el documento");
+        }
+
+        if (selectedFile) {
+          const newPath = `${user.id}/${crypto.randomUUID()}-${selectedFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-")}`;
+          const uploadResult = await supabase.storage.from("documents").upload(newPath, selectedFile, {
+            contentType: selectedFile.type || "application/pdf",
+            upsert: false,
+          });
+
+          if (uploadResult.error) {
+            throw new Error(uploadResult.error.message);
+          }
+
+          const replaceResult = await updatePublication(editingPublication.id, {
+            storage_path: newPath,
+            file_name: selectedFile.name,
+            file_size: selectedFile.size,
+          });
+
+          if (!replaceResult.success) {
+            await supabase.storage.from("documents").remove([newPath]);
+            throw new Error(replaceResult.error || "No se pudo reemplazar el archivo");
+          }
+
+          if (editingPublication.storage_path) {
+            await supabase.storage.from("documents").remove([editingPublication.storage_path]);
+          }
+        }
+
+        setSubmitStatus("success");
+        setMessage("Documento actualizado correctamente.");
+      } else {
+        if (!selectedFile) {
+          throw new Error("Debes seleccionar un archivo PDF");
+        }
+
+        const result = await addPublication({
+          title: payload.titulo,
+          ...payload,
+          description: payload.resumen,
+          titulo: payload.titulo,
+          resumen: payload.resumen,
+          estado: "disponible",
+          file: selectedFile,
+        });
+
+        if (!result.success) {
+          throw new Error(result.error || "No se pudo publicar el documento");
+        }
+
+        setSubmitStatus("success");
+        setMessage("Documento publicado correctamente.");
+      }
+
+      resetForm();
+      await refreshPublications();
+    } catch (error) {
       setSubmitStatus("error");
+      setMessage(error instanceof Error ? error.message : "No se pudo guardar el documento");
     }
 
     setIsSubmitting(false);
   };
 
+  const handleEdit = (publication: Publication) => {
+    setEditingPublication(publication);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) {
+      return;
+    }
+
+    const targetId = deleteId;
+    setIsSubmitting(true);
+    setMessage("");
+    setSubmitStatus(null);
+
+    const result = await deletePublication(targetId);
+    if (!result.success) {
+      setSubmitStatus("error");
+      setMessage(result.error || "No se pudo eliminar el documento");
+      setIsSubmitting(false);
+      return;
+    }
+
+    setSubmitStatus("success");
+    setMessage("Documento eliminado correctamente.");
+    setDeleteId(null);
+    if (editingPublication?.id === targetId) {
+      resetForm();
+    }
+    setIsSubmitting(false);
+  };
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Subir REDS</h1>
-        <p className="mt-2 text-muted-foreground">
-          Completa el formulario para publicar tu recurso digital
-        </p>
+    <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">
+            {editingPublication ? "Editar documento" : "Subir documento"}
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            {editingPublication
+              ? "Actualiza la información del documento y, si lo necesitas, reemplaza el PDF."
+              : "Completa el formulario para publicar un recurso digital."}
+          </p>
+        </div>
+        {editingPublication ? (
+          <Button variant="outline" onClick={resetForm}>
+            Cancelar edición
+          </Button>
+        ) : null}
       </div>
 
       {submitStatus === "success" && (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800">
           <CheckCircle className="h-5 w-5" />
-          <span>Recurso digital publicado correctamente.</span>
+          <span>{message || "Operación completada correctamente."}</span>
         </div>
       )}
 
       {submitStatus === "error" && (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-destructive/10 p-4 text-destructive">
           <AlertCircle className="h-5 w-5" />
-          <span>Error al publicar el recurso digital. Intenta de nuevo.</span>
+          <span>{message || "No se pudo completar la operación."}</span>
         </div>
       )}
 
@@ -170,7 +369,7 @@ export function UploadPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, titulo: e.target.value })
                 }
-                placeholder="Ingresa el título de tu recurso digital"
+                placeholder="Ingresa el título del recurso digital"
                 required
               />
             </div>
@@ -190,71 +389,64 @@ export function UploadPage() {
 
             <div className="space-y-2">
               <Label htmlFor="programa">Programa académico *</Label>
-              <Select
+              <select
+                id="programa"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.programa}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, programa: value })
+                onChange={(e) =>
+                  setFormData({ ...formData, programa: e.target.value })
                 }
                 required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona programa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROGRAMAS_ACADEMICOS.map((prog) => (
-                    <SelectItem key={prog} value={prog}>
-                      {prog}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Selecciona programa</option>
+                {PROGRAMAS_ACADEMICOS.map((prog) => (
+                  <option key={prog} value={prog}>
+                    {prog}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="año">Año *</Label>
-              <Select
+              <select
+                id="año"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.año}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, año: value })
+                onChange={(e) =>
+                  setFormData({ ...formData, año: e.target.value })
                 }
                 required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona año" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 10 }, (_, i) => {
-                    const year = new Date().getFullYear() - i;
-                    return (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                {Array.from({ length: 10 }, (_, i) => {
+                  const year = new Date().getFullYear() - i;
+                  return (
+                    <option key={year} value={year.toString()}>
+                      {year}
+                    </option>
+                  );
+                })}
+              </select>
             </div>
 
             <div className="space-y-2 lg:col-span-2">
               <Label htmlFor="lineaTematica">Línea temática *</Label>
-              <Select
+              <select
+                id="lineaTematica"
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.lineaTematica}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, lineaTematica: value })
+                onChange={(e) =>
+                  setFormData({ ...formData, lineaTematica: e.target.value })
                 }
                 required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona línea temática" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LINEAS_TEMATICAS.map((linea) => (
-                    <SelectItem key={linea} value={linea}>
-                      {linea}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Selecciona línea temática</option>
+                {LINEAS_TEMATICAS.map((linea) => (
+                  <option key={linea} value={linea}>
+                    {linea}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2 lg:col-span-2">
@@ -265,7 +457,7 @@ export function UploadPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, resumen: e.target.value })
                 }
-                placeholder="Escribe un resumen de tu recurso digital (máximo 500 caracteres)"
+                placeholder="Escribe un resumen del recurso digital (máximo 500 caracteres)"
                 rows={4}
                 maxLength={500}
                 required
@@ -292,7 +484,7 @@ export function UploadPage() {
             </div>
 
             <div className="space-y-2 lg:col-span-2">
-              <Label>Archivo PDF *</Label>
+              <Label>Archivo PDF {editingPublication ? "(opcional)" : "*"}</Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="cursor-pointer rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50 hover:bg-muted/50"
@@ -334,7 +526,9 @@ export function UploadPage() {
                       Haz clic para seleccionar un archivo PDF
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      o arrastra y suelta aquí
+                      {editingPublication
+                        ? "Si no eliges uno nuevo, se conserva el PDF actual."
+                        : "o arrastra y suelta aquí"}
                     </p>
                   </>
                 )}
@@ -352,14 +546,103 @@ export function UploadPage() {
                 !formData.lineaTematica ||
                 !formData.resumen ||
                 !formData.palabrasClave ||
-                !selectedFile
+                (!selectedFile && !editingPublication)
               }
             >
-              {isSubmitting ? "Publicando..." : "Publicar REDS"}
+              {isSubmitting
+                ? editingPublication
+                  ? "Guardando cambios..."
+                  : "Publicando..."
+                : editingPublication
+                  ? "Guardar cambios"
+                  : "Publicar documento"}
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      <Card className="mt-8 border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PlusCircle className="h-5 w-5 text-primary" />
+            {user.role === "admin" ? "Todos los documentos" : "Mis documentos"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {manageablePublications.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              Aún no tienes documentos registrados
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {manageablePublications.map((publication) => (
+                <div
+                  key={publication.id}
+                  className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-medium text-foreground line-clamp-1">
+                        {publication.titulo}
+                      </h4>
+                      <Badge variant={publication.status === "disponible" ? "default" : "secondary"}>
+                        {DOCUMENT_STATUS_LABELS[publication.status]}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {publication.autor} • {publication.programa} • {publication.año}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {canEditDocument(user, publication) ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(publication)}
+                        className="gap-2"
+                      >
+                        <Edit3 className="h-4 w-4" />
+                        Editar
+                      </Button>
+                    ) : null}
+                    {canDeleteDocument(user, publication) ? (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setDeleteId(publication.id)}
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Eliminar
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. El documento será eliminado permanentemente del repositorio.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

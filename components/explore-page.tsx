@@ -67,7 +67,7 @@ function ExploreContent({
       matchesPrograma &&
       matchesLinea &&
       matchesAnio &&
-      pub.estado === "publicado"
+      pub.status === "disponible"
     );
   });
 

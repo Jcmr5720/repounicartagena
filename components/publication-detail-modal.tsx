@@ -72,17 +72,17 @@ export function PublicationDetailModal({
               <span className="text-muted-foreground">Estado:</span>
               <Badge
                 variant={
-                  publication.estado === "publicado" ? "default" : "secondary"
+                  publication.status === "disponible" ? "default" : "secondary"
                 }
                 className={
-                  publication.estado === "publicado"
+                  publication.status === "disponible"
                     ? "bg-green-100 text-green-800"
                     : ""
                 }
               >
-                {publication.estado === "publicado"
-                  ? "Publicado"
-                  : "En revisión"}
+                {publication.status === "disponible"
+                  ? "Disponible"
+                  : "Suspendido"}
               </Badge>
             </div>
           </div>

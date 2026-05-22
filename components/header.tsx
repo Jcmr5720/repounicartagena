@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { canManageDocuments, canSuspendDocuments, isAdmin } from "@/lib/permissions";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -16,7 +17,7 @@ export function Header() {
   const navItems = [
     { label: "Inicio", href: "/" },
     { label: "Explorar", href: "/explorar" },
-    { label: "Subir REDS", href: "/subir" },
+    ...(canManageDocuments(user) ? [{ label: "Subir REDS", href: "/subir" }] : []),
     { label: "Mi cuenta", href: "/cuenta" },
   ];
 
@@ -65,7 +66,19 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              {user?.role === "admin" && (
+              {canSuspendDocuments(user) && (
+                <Link
+                  href="/moderacion"
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
+                    isActive("/moderacion")
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  Moderación
+                </Link>
+              )}
+              {isAdmin(user) && (
                 <Link
                   href="/admin"
                   className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
@@ -135,7 +148,20 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              {user?.role === "admin" && (
+              {canSuspendDocuments(user) && (
+                <Link
+                  href="/moderacion"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block w-full rounded-md px-3 py-2 text-left text-base font-medium ${
+                    isActive("/moderacion")
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground/70 hover:bg-muted"
+                  }`}
+                >
+                  Moderación
+                </Link>
+              )}
+              {isAdmin(user) && (
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}

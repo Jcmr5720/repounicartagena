@@ -35,12 +35,12 @@ export function PublicationDetailContent({
           <FileText className="h-4 w-4 text-muted-foreground" />
           <span className="text-muted-foreground">Estado:</span>
           <Badge
-            variant={publication.estado === "publicado" ? "default" : "secondary"}
+            variant={publication.status === "disponible" ? "default" : "secondary"}
             className={
-              publication.estado === "publicado" ? "bg-green-100 text-green-800" : ""
+              publication.status === "disponible" ? "bg-green-100 text-green-800" : ""
             }
           >
-            {publication.estado === "publicado" ? "Publicado" : "En revisión"}
+            {publication.status === "disponible" ? "Disponible" : "Suspendido"}
           </Badge>
         </div>
       </div>

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { PROGRAMAS_ACADEMICOS, type User } from "@/lib/types";
+import { PROGRAMAS_ACADEMICOS, ROLE_LABELS, type User } from "@/lib/types";
 export function AccountPage() {
   const { user, isLoading } = useAuth();
 
@@ -109,7 +109,7 @@ function AccountForm({ user }: { user: User }) {
               <Label className="text-muted-foreground">Rol</Label>
               <div className="flex h-10 items-center gap-2 rounded-md border border-border bg-muted/50 px-3 text-sm">
                 <Shield className="h-4 w-4 text-primary" />
-                {user.role === "admin" ? "Administrador" : "Estudiante"}
+                {ROLE_LABELS[user.role]}
               </div>
             </div>
           </div>

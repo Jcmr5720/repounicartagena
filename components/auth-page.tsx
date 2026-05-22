@@ -473,6 +473,10 @@ export function AuthPage() {
                     {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
                     {!isSubmitting && <ArrowRight className="h-4 w-4" />}
                   </Button>
+
+                  <p className="text-xs leading-5 text-stone-500">
+                    Todas las cuentas nuevas se crean automáticamente como estudiante.
+                  </p>
                 </form>
               )}
 

@@ -8,12 +8,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type {
-  User as SupabaseAuthUser,
-} from "@supabase/supabase-js";
+import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
 import { useSupabase } from "@/lib/supabase/provider";
-import { getSupabaseMissingEnvMessage } from "@/lib/supabase/client";
-import type { CartagenaUsuarioUsuario, User } from "./types";
+import type { Profile, UserRole, User } from "./types";
 
 interface AuthResult {
   success: boolean;
@@ -36,12 +33,10 @@ interface AuthContextType {
   loginWithGoogle: (nextPath?: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => Promise<AuthResult>;
+  updateUserRole: (userId: string, role: UserRole) => Promise<AuthResult>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-const USER_STORAGE_KEY = "reds_colombia_user";
-const LEGACY_USER_STORAGE_KEY = ["repo", "sitorio_user"].join("");
-const SUPABASE_NOT_CONFIGURED_ERROR = getSupabaseMissingEnvMessage();
 
 function normalizeText(value: string) {
   return value.trim();
@@ -81,30 +76,30 @@ function readMetadataValue(
 
 function mapAuthUserToAppUser(
   authUser: SupabaseAuthUser,
-  profile: CartagenaUsuarioUsuario | null,
+  profile: Profile | null,
 ): User {
   const metadata = (authUser.user_metadata ?? {}) as Record<string, unknown>;
-  const fallbackEmail = authUser.email ?? profile?.correo ?? "";
+  const fallbackEmail = authUser.email ?? profile?.email ?? "";
   const derivedUsername = deriveUsernameFromEmail(fallbackEmail);
   const username =
-    profile?.usuario ||
+    profile?.username ||
     readMetadataValue(metadata, ["usuario", "username"]) ||
     derivedUsername;
-  const nombre =
-    profile?.nombre ||
+  const fullName =
+    profile?.full_name ||
     readMetadataValue(metadata, ["nombre", "full_name", "name"]) ||
     username;
 
   return {
-    nombre,
+    id: profile?.id ?? authUser.id,
+    email: profile?.email || fallbackEmail,
     username,
-    role:
-      (metadata.role === "admin" || metadata.role === "estudiante"
-        ? metadata.role
-        : "estudiante"),
-    email: profile?.correo || fallbackEmail,
-    programa: readMetadataValue(metadata, ["programa"]),
-    telefono: readMetadataValue(metadata, ["telefono"]),
+    full_name: fullName,
+    role: profile?.role ?? "estudiante",
+    programa: profile?.programa ?? "",
+    telefono: profile?.telefono ?? "",
+    created_at: profile?.created_at ?? authUser.created_at ?? new Date().toISOString(),
+    updated_at: profile?.updated_at ?? new Date().toISOString(),
   };
 }
 
@@ -128,24 +123,49 @@ function normalizeAuthError(message: string) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useSupabase();
+  const auth = supabase.auth;
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const ensureProfile = useCallback(
+    async (sessionUser: SupabaseAuthUser) => {
+      const fallbackEmail = sessionUser.email ?? "";
+      const metadata = (sessionUser.user_metadata ?? {}) as Record<string, unknown>;
+      const fallbackUsername =
+        readMetadataValue(metadata, ["usuario", "username"]) ||
+        deriveUsernameFromEmail(fallbackEmail);
+      const fallbackFullName =
+        readMetadataValue(metadata, ["nombre", "full_name", "name"]) ||
+        fallbackUsername;
+
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          id: sessionUser.id,
+          email: fallbackEmail,
+          username: fallbackUsername,
+          full_name: fallbackFullName,
+          role: "estudiante",
+        },
+        { onConflict: "id" },
+      );
+
+      if (error) {
+        console.error("Error ensuring profile exists", error);
+      }
+    },
+    [supabase],
+  );
+
   const loadProfile = useCallback(
     async (sessionUser: SupabaseAuthUser | null) => {
-      if (!supabase) {
-        setUser(null);
-        return;
-      }
-
       if (!sessionUser) {
         setUser(null);
         return;
       }
 
       const { data, error } = await supabase
-        .from("cartagena_usuario_usuario")
-        .select("id,nombre,correo,usuario,created_at,updated_at")
+        .from("profiles")
+        .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
         .eq("id", sessionUser.id)
         .maybeSingle();
 
@@ -153,20 +173,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error loading profile from Supabase", error);
       }
 
-      setUser(mapAuthUserToAppUser(sessionUser, data ?? null));
+      if (!data) {
+        await ensureProfile(sessionUser);
+        const { data: fallbackProfile } = await supabase
+          .from("profiles")
+          .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
+          .eq("id", sessionUser.id)
+          .maybeSingle();
+
+        setUser(mapAuthUserToAppUser(sessionUser, fallbackProfile ?? null));
+        return;
+      }
+
+      setUser(mapAuthUserToAppUser(sessionUser, data as Profile));
     },
-    [supabase],
+    [ensureProfile, supabase],
   );
 
   useEffect(() => {
-    if (!supabase) {
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
     let isMounted = true;
-    const auth = supabase.auth;
 
     const initializeAuth = async () => {
       const {
@@ -194,14 +219,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [supabase, loadProfile]);
+  }, [auth, loadProfile]);
 
-  const login = async (identifier: string, password: string): Promise<AuthResult> => {
-    if (!supabase) {
-      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
-    }
-
-    const auth = supabase.auth;
+  const login = async (
+    identifier: string,
+    password: string,
+  ): Promise<AuthResult> => {
     const trimmedIdentifier = normalizeText(identifier);
     const email = trimmedIdentifier.includes("@")
       ? trimmedIdentifier.toLowerCase()
@@ -229,11 +252,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     usuario,
     password,
   }: RegisterInput): Promise<AuthResult> => {
-    if (!supabase) {
-      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
-    }
-
-    const auth = supabase.auth;
     const normalizedNombre = normalizeText(nombre);
     const normalizedEmail = normalizeText(email).toLowerCase();
     const normalizedUsuario = normalizeUsername(usuario);
@@ -249,7 +267,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: normalizedNombre,
           usuario: normalizedUsuario,
           username: normalizedUsuario,
-          role: "estudiante",
         },
       },
     });
@@ -271,11 +288,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (
     nextPath = "/",
   ): Promise<AuthResult> => {
-    if (!supabase) {
-      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
-    }
-
-    const auth = supabase.auth;
     const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`;
 
     const { error } = await auth.signInWithOAuth({
@@ -293,12 +305,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    if (!supabase) {
-      setUser(null);
-      return;
-    }
-
-    const auth = supabase.auth;
     const { error } = await auth.signOut();
 
     if (error) {
@@ -306,16 +312,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setUser(null);
-    localStorage.removeItem(USER_STORAGE_KEY);
-    localStorage.removeItem(LEGACY_USER_STORAGE_KEY);
   };
 
   const updateUser = async (userData: Partial<User>): Promise<AuthResult> => {
-    if (!supabase) {
-      return { success: false, error: SUPABASE_NOT_CONFIGURED_ERROR };
-    }
-
-    const auth = supabase.auth;
     const {
       data: { user: authUser },
       error: authUserError,
@@ -326,45 +325,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const nextEmail = userData.email?.trim().toLowerCase();
-    const metadata = (authUser.user_metadata ?? {}) as Record<string, unknown>;
     const nextNombre = normalizeText(
-      userData.nombre ??
-        user?.nombre ??
-        readMetadataValue(metadata, ["nombre", "full_name", "name"]),
+      userData.full_name ??
+        user?.full_name ??
+        readMetadataValue((authUser.user_metadata ?? {}) as Record<string, unknown>, [
+          "nombre",
+          "full_name",
+          "name",
+        ]) ??
+        user?.username ??
+        deriveUsernameFromEmail(authUser.email),
     );
     const nextUsuario = normalizeUsername(
       userData.username ??
         user?.username ??
-        readMetadataValue(metadata, ["usuario", "username"]),
+        readMetadataValue((authUser.user_metadata ?? {}) as Record<string, unknown>, [
+          "usuario",
+          "username",
+        ]) ??
+        deriveUsernameFromEmail(authUser.email),
     );
     const nextPrograma = normalizeText(
       userData.programa ??
         user?.programa ??
-        readMetadataValue(metadata, ["programa"]),
+        readMetadataValue((authUser.user_metadata ?? {}) as Record<string, unknown>, [
+          "programa",
+        ]),
     );
     const nextTelefono = normalizeText(
       userData.telefono ??
         user?.telefono ??
-        readMetadataValue(metadata, ["telefono"]),
+        readMetadataValue((authUser.user_metadata ?? {}) as Record<string, unknown>, [
+          "telefono",
+        ]),
     );
-    const nextRole = userData.role ?? user?.role ?? "estudiante";
 
-    const { error } = await auth.updateUser({
-      email: nextEmail || undefined,
-      data: {
-        nombre: nextNombre || user?.nombre || nextUsuario || deriveUsernameFromEmail(authUser.email),
-        full_name: nextNombre || user?.nombre || nextUsuario || deriveUsernameFromEmail(authUser.email),
-        name: nextNombre || user?.nombre || nextUsuario || deriveUsernameFromEmail(authUser.email),
-        usuario: nextUsuario || user?.username || deriveUsernameFromEmail(authUser.email),
-        username: nextUsuario || user?.username || deriveUsernameFromEmail(authUser.email),
+    if (nextEmail && nextEmail !== authUser.email) {
+      const { error: emailError } = await auth.updateUser({
+        email: nextEmail,
+      });
+
+      if (emailError) {
+        return { success: false, error: normalizeAuthError(emailError.message) };
+      }
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        email: nextEmail || authUser.email || "",
+        full_name: nextNombre,
+        username: nextUsuario,
         programa: nextPrograma,
         telefono: nextTelefono,
-        role: nextRole,
-      },
-    });
+      })
+      .eq("id", authUser.id);
 
     if (error) {
       return { success: false, error: normalizeAuthError(error.message) };
+    }
+
+    await loadProfile(authUser);
+
+    return { success: true };
+  };
+
+  const updateUserRole = async (
+    userId: string,
+    role: UserRole,
+  ): Promise<AuthResult> => {
+    const {
+      data: { user: authUser },
+      error: authUserError,
+    } = await auth.getUser();
+
+    if (authUserError || !authUser) {
+      return { success: false, error: "No hay una sesión activa" };
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ role })
+      .eq("id", userId);
+
+    if (error) {
+      return { success: false, error: normalizeAuthError(error.message) };
+    }
+
+    if (user?.id === userId) {
+      await loadProfile(authUser);
     }
 
     return { success: true };
@@ -380,6 +429,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithGoogle,
         logout,
         updateUser,
+        updateUserRole,
       }}
     >
       {children}

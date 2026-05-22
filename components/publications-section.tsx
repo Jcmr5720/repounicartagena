@@ -11,7 +11,7 @@ export function PublicationsSection() {
   const { publications } = usePublications();
 
   const displayedPublications = publications
-    .filter((p) => p.estado === "publicado")
+    .filter((p) => p.status === "disponible")
     .slice(0, 6);
 
   return (
@@ -58,7 +58,7 @@ export function PublicationsSection() {
                     </span>
                   </div>
                   <h3 className="mt-2 line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary">
-                    {publication.titulo}
+                      {publication.titulo}
                   </h3>
                 </CardHeader>
                 <CardContent className="flex flex-1 flex-col pb-4">
