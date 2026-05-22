@@ -54,6 +54,27 @@ Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje 
   - ofrece el siguiente paso
 - Si una pantalla tiene textos de marca, deben sentirse consistentes entre si.
 
+## Reglas de Supabase
+
+- Todo cambio de schema, tabla, funcion, trigger, policy, vista, constraint o index debe subirse directo a Supabase como parte de la misma tarea.
+- El agente no debe detenerse a pedir permiso para sincronizar cambios de base de datos.
+- Despues de cada peticion que toque Supabase, el estado local y el remoto deben quedar alineados.
+- No se deja una implementacion "lista" si solo existe localmente y no fue aplicada o reflejada tambien en el remoto.
+- Solo se puede crear, modificar o eliminar objetos cuyo nombre empiece por `cartagena_`.
+- Toda tabla, funcion, trigger, policy, vista, constraint e index nuevo debe empezar por `cartagena_`.
+- No se debe tocar ningun objeto que no pertenezca al namespace `cartagena_`.
+- Esta base de datos comparte espacio con otros proyectos. Cualquier tabla, funcion o recurso sin prefijo `cartagena_` se considera fuera de alcance y no se modifica.
+- Si un cambio requiere afectar algo que no empieza por `cartagena_`, eso no se hace por defecto y debe tratarse como una excepcion explicita.
+- Cada cambio de base de datos debe quedar bien construido desde la primera entrega:
+  - RLS correcto y activado cuando aplique
+  - policies claras y bien limitadas
+  - constraints bien definidos
+  - indexes necesarios para rendimiento, filtros y busquedas
+  - llaves primarias y foraneas coherentes
+  - nombres consistentes, descriptivos y alineados con `cartagena_`
+- Nunca crear tablas, funciones o policies incompletas o sin protecciones minimas.
+- Cuando se creen migraciones, deben representar fielmente lo que queda aplicado en el remoto.
+
 ## Reglas de implementacion
 
 ### Antes de tocar algo
@@ -98,6 +119,10 @@ Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje 
   - respaldo o metadatos
 - No guardes contrasenas en tablas de perfil.
 - Si una pantalla depende de datos remotos, define bien el estado de carga, error y vacio.
+- Si tocas Supabase, deja el remoto y el local alineados en la misma tarea.
+- No crees ni modifiques tablas o funciones fuera del namespace `cartagena_`.
+- Todo objeto nuevo de base de datos debe llamarse `cartagena_...`.
+- Toda estructura nueva debe salir con RLS, constraints, indexes y relaciones bien definidas.
 
 ## Reglas para agentes
 
@@ -110,6 +135,9 @@ Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje 
 - Si hay ambiguedad alta, para y valida antes de decidir.
 - Si un cambio toca varias areas, piensa en el efecto en cadena.
 - Si una solucion es buena pero inconsistente con el sistema, ajusta la solucion al sistema, no al reves.
+- No toques objetos de Supabase que no empiecen por `cartagena_`.
+- No cierres tareas de base de datos si remoto y local no quedaron alineados.
+- No dejes migraciones sin aplicar si la tarea exigia cambios reales en Supabase.
 
 ## Checklist antes de entregar
 
@@ -120,6 +148,9 @@ Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje 
 - Confirmar que no se rompio ningun flujo existente
 - Confirmar que los cambios son coherentes en mobile y desktop
 - Si hubo cambios de auth o datos, revisar el flujo completo de principio a fin
+- Si hubo cambios en Supabase, confirmar que remoto y local quedaron alineados
+- Si hubo objetos nuevos en base de datos, confirmar que todos usan el prefijo `cartagena_`
+- Validar que tablas, funciones y policies nuevas tengan RLS, constraints, indexes y relaciones correctas
 
 ## Notas para agentes futuros
 
@@ -128,4 +159,5 @@ Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje 
 - Si una nueva funcionalidad necesita una excepcion visual o textual, deja esa excepcion documentada.
 - Cuando tengas duda, elige la opcion mas simple que preserve el lenguaje actual del proyecto.
 - Piensa en este sitio como un producto vivo: cada cambio debe encajar con lo que ya existe.
-
+- En Supabase, la prioridad absoluta es proteger el namespace `cartagena_` y no tocar nada de otros proyectos.
+- Cada entrega que afecte base de datos debe terminar con el remoto y el local sincronizados.
