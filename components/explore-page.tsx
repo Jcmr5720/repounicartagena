@@ -44,10 +44,15 @@ function ExploreContent({
   initialSearch: string;
   publications: Publication[];
 }) {
+  const { programas } = usePublications();
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [programaFilter, setProgramaFilter] = useState<string>("");
   const [lineaFilter, setLineaFilter] = useState<string>("");
   const [anioFilter, setAnioFilter] = useState<string>("");
+  const programOptions =
+    programas.length > 0
+      ? programas
+      : PROGRAMAS_ACADEMICOS.map((nombre) => ({ id: nombre, nombre }));
 
   const filteredPublications = publications.filter((pub) => {
     const matchesSearch =
@@ -119,9 +124,9 @@ function ExploreContent({
                 <SelectValue placeholder="Programa académico" />
               </SelectTrigger>
               <SelectContent>
-                {PROGRAMAS_ACADEMICOS.map((prog) => (
-                  <SelectItem key={prog} value={prog}>
-                    {prog}
+                {programOptions.map((prog) => (
+                  <SelectItem key={prog.id} value={prog.nombre}>
+                    {prog.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -270,7 +275,7 @@ function ExploreContent({
                   <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {new Date(publication.fechaPublicacion).toLocaleDateString(
+                      {new Date(publication.fechaPublicacion ?? publication.created_at).toLocaleDateString(
                         "es-CO",
                         {
                           day: "numeric",

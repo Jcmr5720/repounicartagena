@@ -1,4 +1,4 @@
-# Implementación de roles, permisos y documentos
+﻿# Implementación de roles, permisos y documentos
 
 ## Qué se hizo
 
@@ -14,6 +14,8 @@ Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por
 ### Documentos
 
 - Se creó `public.cartagena_producto_producto`.
+- Se normalizó el campo de programa con `public.cartagena_producto_programa`.
+- `cartagena_producto_producto` ahora guarda `programa_id` como FK al catálogo de programas.
 - Se agregó el estado `disponible | suspendido`.
 - Se conectó la gestión de documentos a Supabase Database y Supabase Storage.
 - Se protegieron las operaciones con RLS.
@@ -55,12 +57,13 @@ Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por
 Archivo:
 
 - `supabase/migrations/20260522000200_roles_profiles_documents.sql`
+- `supabase/migrations/20260523000300_cartagena_producto_programa.sql`
 
-Ese archivo incluye:
+Esos archivos incluyen:
 
 - enums de rol y estado,
 - triggers de sincronización con Auth,
-- policies RLS para `cartagena_usuario_usuario` y `cartagena_producto_producto`,
+- policies RLS para `cartagena_usuario_usuario`, `cartagena_producto_producto` y `cartagena_producto_programa`,
 - policies del bucket de Storage `documents`.
 
 ## Verificación

@@ -2,6 +2,13 @@ export type UserRole = "estudiante" | "moderador" | "admin";
 
 export type DocumentStatus = "disponible" | "suspendido";
 
+export interface AcademicProgram {
+  id: string;
+  nombre: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Profile {
   id: string;
   email: string;
@@ -24,6 +31,7 @@ export interface Document {
   description: string;
   resumen: string;
   autor: string;
+  programa_id: string;
   programa: string;
   año: number;
   lineaTematica: string;
@@ -34,6 +42,7 @@ export interface Document {
   file_name?: string | null;
   file_size?: number | null;
   pdfUrl?: string;
+  fechaPublicacion?: string;
   created_at: string;
   updated_at: string;
 }

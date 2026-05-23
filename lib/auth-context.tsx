@@ -123,12 +123,17 @@ function normalizeAuthError(message: string) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useSupabase();
-  const auth = supabase.auth;
+  const client = supabase;
+  const authClient = client?.auth;
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const ensureProfile = useCallback(
     async (sessionUser: SupabaseAuthUser) => {
+      if (!client) {
+        return;
+      }
+
       const fallbackEmail = sessionUser.email ?? "";
       const metadata = (sessionUser.user_metadata ?? {}) as Record<string, unknown>;
       const fallbackUsername =
@@ -138,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         readMetadataValue(metadata, ["nombre", "full_name", "name"]) ||
         fallbackUsername;
 
-      const { error } = await supabase.from("cartagena_usuario_usuario").upsert(
+      const { error } = await client.from("cartagena_usuario_usuario").upsert(
         {
           id: sessionUser.id,
           email: fallbackEmail,
@@ -153,17 +158,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Error ensuring profile exists", error);
       }
     },
-    [supabase],
+    [client],
   );
 
   const loadProfile = useCallback(
     async (sessionUser: SupabaseAuthUser | null) => {
+      if (!client || !authClient) {
+        setUser(null);
+        return;
+      }
+
       if (!sessionUser) {
         setUser(null);
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await client
         .from("cartagena_usuario_usuario")
         .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
         .eq("id", sessionUser.id)
@@ -175,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!data) {
         await ensureProfile(sessionUser);
-        const { data: fallbackProfile } = await supabase
+        const { data: fallbackProfile } = await client
           .from("cartagena_usuario_usuario")
           .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
           .eq("id", sessionUser.id)
@@ -187,16 +197,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(mapAuthUserToAppUser(sessionUser, data as Profile));
     },
-    [ensureProfile, supabase],
+    [authClient, client, ensureProfile],
   );
 
   useEffect(() => {
     let isMounted = true;
 
     const initializeAuth = async () => {
+      if (!authClient) {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       const {
         data: { session },
-      } = await auth.getSession();
+      } = await authClient.getSession();
 
       if (!isMounted) {
         return;
@@ -208,9 +225,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void initializeAuth();
 
+    if (!authClient) {
+      return () => {
+        isMounted = false;
+      };
+    }
+
     const {
       data: { subscription },
-    } = auth.onAuthStateChange((_event, session) => {
+    } = authClient.onAuthStateChange((_event, session) => {
       void loadProfile(session?.user ?? null);
       setIsLoading(false);
     });
@@ -219,12 +242,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [auth, loadProfile]);
+  }, [authClient, loadProfile]);
 
   const login = async (
     identifier: string,
     password: string,
   ): Promise<AuthResult> => {
+    if (!authClient) {
+      return { success: false, error: "Supabase no está disponible" };
+    }
+
     const trimmedIdentifier = normalizeText(identifier);
     const email = trimmedIdentifier.includes("@")
       ? trimmedIdentifier.toLowerCase()
@@ -234,7 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: "Ingresa tu correo electrónico" };
     }
 
-    const { error } = await auth.signInWithPassword({
+    const { error } = await authClient.signInWithPassword({
       email,
       password,
     });
@@ -252,11 +279,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     usuario,
     password,
   }: RegisterInput): Promise<AuthResult> => {
+    if (!authClient) {
+      return { success: false, error: "Supabase no está disponible" };
+    }
+
     const normalizedNombre = normalizeText(nombre);
     const normalizedEmail = normalizeText(email).toLowerCase();
     const normalizedUsuario = normalizeUsername(usuario);
 
-    const { data, error } = await auth.signUp({
+    const { data, error } = await authClient.signUp({
       email: normalizedEmail,
       password,
       options: {
@@ -288,9 +319,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithGoogle = async (
     nextPath = "/",
   ): Promise<AuthResult> => {
+    if (!authClient) {
+      return { success: false, error: "Supabase no está disponible" };
+    }
+
     const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`;
 
-    const { error } = await auth.signInWithOAuth({
+    const { error } = await authClient.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo,
@@ -305,7 +340,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const { error } = await auth.signOut();
+    if (!authClient) {
+      return;
+    }
+
+    const { error } = await authClient.signOut();
 
     if (error) {
       console.error("Error signing out", error);
@@ -315,10 +354,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const updateUser = async (userData: Partial<User>): Promise<AuthResult> => {
+    if (!authClient || !client) {
+      return { success: false, error: "Supabase no está disponible" };
+    }
+
     const {
       data: { user: authUser },
       error: authUserError,
-    } = await auth.getUser();
+      } = await authClient.getUser();
 
     if (authUserError || !authUser) {
       return { success: false, error: "No hay una sesión activa" };
@@ -361,7 +404,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     if (nextEmail && nextEmail !== authUser.email) {
-      const { error: emailError } = await auth.updateUser({
+      const { error: emailError } = await authClient.updateUser({
         email: nextEmail,
       });
 
@@ -370,7 +413,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from("cartagena_usuario_usuario")
       .update({
         email: nextEmail || authUser.email || "",
@@ -394,16 +437,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userId: string,
     role: UserRole,
   ): Promise<AuthResult> => {
+    if (!authClient || !client) {
+      return { success: false, error: "Supabase no está disponible" };
+    }
+
     const {
       data: { user: authUser },
       error: authUserError,
-    } = await auth.getUser();
+      } = await authClient.getUser();
 
     if (authUserError || !authUser) {
       return { success: false, error: "No hay una sesión activa" };
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from("cartagena_usuario_usuario")
       .update({ role })
       .eq("id", userId);

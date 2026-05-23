@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -12,15 +12,23 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { useSupabase } from "@/lib/supabase/provider";
 import { canViewAllDocuments } from "@/lib/permissions";
-import type { Document, Publication } from "./types";
+import type { AcademicProgram, Document, Publication } from "./types";
 
 interface PublicationsContextType {
   publications: Publication[];
+  programas: AcademicProgram[];
   isLoading: boolean;
   addPublication: (
     publication: Omit<
       Document,
-      "id" | "owner_id" | "status" | "storage_path" | "pdfUrl" | "created_at" | "updated_at"
+      | "id"
+      | "owner_id"
+      | "programa_id"
+      | "status"
+      | "storage_path"
+      | "pdfUrl"
+      | "created_at"
+      | "updated_at"
     > & { file: File },
   ) => Promise<{ success: boolean; error?: string }>;
   updatePublication: (
@@ -39,6 +47,7 @@ const PublicationsContext = createContext<PublicationsContextType | undefined>(
 
 const DOCUMENTS_BUCKET = "documents";
 const PUBLICATIONS_TABLE = "cartagena_producto_producto";
+const PROGRAMS_TABLE = "cartagena_producto_programa";
 const PUBLICATIONS_STORAGE_KEY = "reds_colombia_publications";
 const LEGACY_PUBLICATIONS_STORAGE_KEY = ["repo", "sitorio_publications"].join("");
 const LEGACY_IMPORT_FLAG = "reds_colombia_documents_migrated";
@@ -49,7 +58,11 @@ type SupabaseDocumentRow = {
   title: string;
   description: string;
   autor: string;
-  programa: string;
+  programa_id: string;
+  programa: {
+    id: string;
+    nombre: string;
+  }[] | null;
   anio: number;
   linea_tematica: string;
   palabras_clave: string[] | null;
@@ -61,12 +74,19 @@ type SupabaseDocumentRow = {
   updated_at: string;
 };
 
+type SupabaseProgramRow = {
+  id: string;
+  nombre: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type LegacyPublication = {
   id?: string;
   titulo?: string;
   autor?: string;
   programa?: string;
-  año?: number;
+  anio?: number;
   lineaTematica?: string;
   resumen?: string;
   palabrasClave?: string[];
@@ -86,7 +106,8 @@ function mapRowToPublication(
     description: row.description,
     resumen: row.description,
     autor: row.autor,
-    programa: row.programa,
+    programa_id: row.programa_id,
+    programa: row.programa?.[0]?.nombre ?? "",
     año: row.anio,
     lineaTematica: row.linea_tematica,
     palabrasClave: row.palabras_clave ?? [],
@@ -96,32 +117,44 @@ function mapRowToPublication(
     file_name: row.file_name,
     file_size: row.file_size,
     pdfUrl: publicUrl,
+    fechaPublicacion: row.created_at,
     created_at: row.created_at,
     updated_at: row.updated_at,
   };
 }
 
-function mapLegacyPublicationToInsert(
-  publication: LegacyPublication,
+function buildDocumentInsertPayload(
+  publication: {
+    title: string;
+    description: string;
+    autor: string;
+    programa: string;
+    anio: number;
+    lineaTematica: string;
+    palabrasClave: string[];
+    status: "disponible" | "suspendido";
+  },
   ownerId: string,
+  programaId: string,
 ) {
   return {
     owner_id: ownerId,
-    title: publication.titulo?.trim() || "Documento sin título",
-    description: publication.resumen?.trim() || "",
-    autor: publication.autor?.trim() || "",
-    programa: publication.programa?.trim() || "",
-    anio: publication.año ?? new Date().getFullYear(),
-    linea_tematica: publication.lineaTematica?.trim() || "",
-    palabras_clave: publication.palabrasClave ?? [],
-    status:
-      publication.estado === "suspendido"
-        ? "suspendido"
-        : "disponible",
+    title: publication.title.trim(),
+    description: publication.description.trim(),
+    autor: publication.autor.trim(),
+    programa_id: programaId,
+    anio: publication.anio,
+    linea_tematica: publication.lineaTematica.trim(),
+    palabras_clave: publication.palabrasClave,
+    status: publication.status,
     storage_path: null,
     file_name: null,
     file_size: null,
   };
+}
+
+function normalizeProgramName(programa: string) {
+  return programa.trim();
 }
 
 function normalizeQuery(query: string) {
@@ -132,22 +165,86 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   const supabase = useSupabase();
   const { user, isLoading: authLoading } = useAuth();
   const [publications, setPublications] = useState<Publication[]>([]);
+  const [programas, setProgramas] = useState<AcademicProgram[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const resolveProgramId = useCallback(
+    async (programaNombre: string) => {
+      if (!supabase) {
+        return { error: "Supabase no está disponible" };
+      }
+
+      const normalizedName = normalizeProgramName(programaNombre);
+
+      if (!normalizedName) {
+        return { error: "Debes seleccionar un programa" };
+      }
+
+      const cachedProgram = programas.find((programa) => programa.nombre === normalizedName);
+      if (cachedProgram) {
+        return { id: cachedProgram.id };
+      }
+
+      const { data, error } = await supabase
+        .from(PROGRAMS_TABLE)
+        .select("id,nombre,created_at,updated_at")
+        .eq("nombre", normalizedName)
+        .maybeSingle();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      if (!data) {
+        return { error: `No se encontrÃ³ el programa "${normalizedName}"` };
+      }
+
+      return { id: (data as SupabaseProgramRow).id };
+    },
+    [programas, supabase],
+  );
+
+  const loadPrograms = useCallback(async () => {
+    if (!supabase) {
+      setProgramas([]);
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from(PROGRAMS_TABLE)
+      .select("id,nombre,created_at,updated_at")
+      .order("nombre", { ascending: true });
+
+    if (error) {
+      console.error("Error loading programs", error);
+      setProgramas([]);
+      return [];
+    }
+
+    const rows = ((data ?? []) as SupabaseProgramRow[]).sort((left, right) =>
+      left.nombre.localeCompare(right.nombre, "es"),
+    );
+    setProgramas(rows);
+    return rows;
+  }, [supabase]);
 
   const loadPublications = useCallback(async () => {
     if (!supabase) {
       setPublications([]);
+      setProgramas([]);
       setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
 
+    await loadPrograms();
+
     const shouldFetchAll = canViewAllDocuments(user);
     const query = supabase
       .from(PUBLICATIONS_TABLE)
       .select(
-        "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
+        "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
       )
       .order("created_at", { ascending: false });
 
@@ -175,8 +272,33 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (!migrationFlag && legacySaved) {
         try {
           const legacyPublications = JSON.parse(legacySaved) as LegacyPublication[];
-          const rowsToInsert = legacyPublications.map((publication) =>
-            mapLegacyPublicationToInsert(publication, user.id),
+          const rowsToInsert = await Promise.all(
+            legacyPublications.map(async (publication) => {
+              const programaName = normalizeProgramName(publication.programa ?? "");
+              const { id: programaId, error: programaError } = await resolveProgramId(programaName);
+
+              if (programaError || !programaId) {
+                throw new Error(programaError || "No se pudo resolver el programa del documento heredado");
+              }
+
+              return buildDocumentInsertPayload(
+                {
+                  title: publication.titulo?.trim() || "Documento sin tÃ­tulo",
+                  description: publication.resumen?.trim() || "",
+                  autor: publication.autor?.trim() || "",
+                  programa: programaName,
+                  anio: publication.anio ?? new Date().getFullYear(),
+                  lineaTematica: publication.lineaTematica?.trim() || "",
+                  palabrasClave: publication.palabrasClave ?? [],
+                  status:
+                    publication.estado === "suspendido"
+                      ? "suspendido"
+                      : "disponible",
+                },
+                user.id,
+                programaId,
+              );
+            }),
           );
 
           if (rowsToInsert.length > 0) {
@@ -204,13 +326,13 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         ? await supabase
             .from(PUBLICATIONS_TABLE)
             .select(
-              "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
+              "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
             )
             .order("created_at", { ascending: false })
         : await supabase
             .from(PUBLICATIONS_TABLE)
             .select(
-              "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
+              "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
             )
             .eq("status", "disponible")
             .order("created_at", { ascending: false });
@@ -245,7 +367,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
     setPublications(documentsWithUrls);
     setIsLoading(false);
-  }, [supabase, user]);
+  }, [loadPrograms, resolveProgramId, supabase, user]);
 
   useEffect(() => {
     if (authLoading) {
@@ -260,14 +382,25 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   }, [loadPublications]);
 
   const addPublication = useCallback(
-    async (
-      publication: Omit<
-        Document,
-        "id" | "owner_id" | "status" | "storage_path" | "pdfUrl" | "created_at" | "updated_at"
-      > & { file: File },
-    ) => {
+      async (
+        publication: Omit<
+          Document,
+          | "id"
+          | "owner_id"
+          | "programa_id"
+          | "status"
+          | "storage_path"
+          | "pdfUrl"
+          | "created_at"
+          | "updated_at"
+        > & { file: File },
+      ) => {
+      if (!supabase) {
+        return { success: false, error: "Supabase no está disponible" };
+      }
+
       if (!user) {
-        return { success: false, error: "Debes iniciar sesión para subir documentos" };
+        return { success: false, error: "Debes iniciar sesiÃ³n para subir documentos" };
       }
 
       const fileExtension = publication.file.name.split(".").pop() || "pdf";
@@ -285,12 +418,24 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { success: false, error: uploadResult.error.message };
       }
 
+      const { id: programaId, error: programaError } = await resolveProgramId(
+        publication.programa,
+      );
+
+      if (programaError || !programaId) {
+        await supabase.storage.from(DOCUMENTS_BUCKET).remove([storagePath]);
+        return {
+          success: false,
+          error: programaError || "No se pudo resolver el programa seleccionado",
+        };
+      }
+
       const { error } = await supabase.from(PUBLICATIONS_TABLE).insert({
         owner_id: user.id,
         title: publication.title.trim(),
         description: publication.description.trim(),
         autor: publication.autor.trim(),
-        programa: publication.programa.trim(),
+        programa_id: programaId,
         anio: publication.año,
         linea_tematica: publication.lineaTematica.trim(),
         palabras_clave: publication.palabrasClave,
@@ -308,11 +453,15 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       await loadPublications();
       return { success: true };
     },
-    [loadPublications, supabase, user],
+    [loadPublications, resolveProgramId, supabase, user],
   );
 
   const updatePublication = useCallback(
     async (id: string, updates: Partial<Publication>) => {
+      if (!supabase) {
+        return { success: false, error: "Supabase no está disponible" };
+      }
+
       const payload: Record<string, unknown> = {};
 
       if (updates.title !== undefined) payload.title = updates.title.trim();
@@ -320,8 +469,21 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (updates.description !== undefined) payload.description = updates.description.trim();
       if (updates.resumen !== undefined) payload.description = updates.resumen.trim();
       if (updates.autor !== undefined) payload.autor = updates.autor.trim();
-      if (updates.programa !== undefined) payload.programa = updates.programa.trim();
-      if (updates["año"] !== undefined) payload.anio = updates["año"];
+      if (updates.programa !== undefined) {
+        const { id: programaId, error: programaError } = await resolveProgramId(
+          updates.programa,
+        );
+
+        if (programaError || !programaId) {
+          return {
+            success: false,
+            error: programaError || "No se pudo resolver el programa seleccionado",
+          };
+        }
+
+        payload.programa_id = programaId;
+      }
+      if (updates.año !== undefined) payload.anio = updates.año;
       if (updates.lineaTematica !== undefined) {
         payload.linea_tematica = updates.lineaTematica.trim();
       }
@@ -341,11 +503,15 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       await loadPublications();
       return { success: true };
     },
-    [loadPublications, supabase],
+    [loadPublications, resolveProgramId, supabase],
   );
 
   const deletePublication = useCallback(
     async (id: string) => {
+      if (!supabase) {
+        return { success: false, error: "Supabase no está disponible" };
+      }
+
       const currentPublication = publications.find((publication) => publication.id === id);
       if (!currentPublication) {
         return { success: false, error: "El documento no existe" };
@@ -397,6 +563,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       publications,
+      programas,
       isLoading,
       addPublication,
       updatePublication,
@@ -411,6 +578,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       getPublicationById,
       isLoading,
       publications,
+      programas,
       refreshPublications,
       searchPublications,
       updatePublication,
@@ -433,3 +601,5 @@ export function usePublications() {
 
   return context;
 }
+
+

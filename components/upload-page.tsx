@@ -69,6 +69,7 @@ export function UploadPage() {
   const { user, isLoading } = useAuth();
   const {
     publications,
+    programas,
     addPublication,
     updatePublication,
     deletePublication,
@@ -77,6 +78,10 @@ export function UploadPage() {
   } = usePublications();
   const supabase = useSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const programOptions =
+    programas.length > 0
+      ? programas
+      : PROGRAMAS_ACADEMICOS.map((nombre) => ({ id: nombre, nombre }));
 
   const [formData, setFormData] = useState<FormState>(INITIAL_FORM);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -192,6 +197,14 @@ export function UploadPage() {
     setSubmitStatus(null);
     setMessage("");
 
+    const client = supabase;
+    if (!client) {
+      setSubmitStatus("error");
+      setMessage("Supabase no está disponible.");
+      setIsSubmitting(false);
+      return;
+    }
+
     const payload = {
       titulo: formData.titulo.trim(),
       autor: formData.autor.trim(),
@@ -226,7 +239,7 @@ export function UploadPage() {
 
         if (selectedFile) {
           const newPath = `${user.id}/${crypto.randomUUID()}-${selectedFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-")}`;
-          const uploadResult = await supabase.storage.from("documents").upload(newPath, selectedFile, {
+          const uploadResult = await client.storage.from("documents").upload(newPath, selectedFile, {
             contentType: selectedFile.type || "application/pdf",
             upsert: false,
           });
@@ -242,12 +255,12 @@ export function UploadPage() {
           });
 
           if (!replaceResult.success) {
-            await supabase.storage.from("documents").remove([newPath]);
+            await client.storage.from("documents").remove([newPath]);
             throw new Error(replaceResult.error || "No se pudo reemplazar el archivo");
           }
 
           if (editingPublication.storage_path) {
-            await supabase.storage.from("documents").remove([editingPublication.storage_path]);
+            await client.storage.from("documents").remove([editingPublication.storage_path]);
           }
         }
 
@@ -399,9 +412,9 @@ export function UploadPage() {
                 required
               >
                 <option value="">Selecciona programa</option>
-                {PROGRAMAS_ACADEMICOS.map((prog) => (
-                  <option key={prog} value={prog}>
-                    {prog}
+                {programOptions.map((prog) => (
+                  <option key={prog.id} value={prog.nombre}>
+                    {prog.nombre}
                   </option>
                 ))}
               </select>
