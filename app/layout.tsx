@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import { Providers } from "./providers";
 import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
@@ -45,7 +44,6 @@ export default function RootLayout({
         <Providers>
           <SiteShell>{children}</SiteShell>
         </Providers>
-        {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
     </html>
   );
