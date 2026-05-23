@@ -38,6 +38,7 @@ const PublicationsContext = createContext<PublicationsContextType | undefined>(
 );
 
 const DOCUMENTS_BUCKET = "documents";
+const PUBLICATIONS_TABLE = "cartagena_producto_producto";
 const PUBLICATIONS_STORAGE_KEY = "reds_colombia_publications";
 const LEGACY_PUBLICATIONS_STORAGE_KEY = ["repo", "sitorio_publications"].join("");
 const LEGACY_IMPORT_FLAG = "reds_colombia_documents_migrated";
@@ -144,7 +145,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
     const shouldFetchAll = canViewAllDocuments(user);
     const query = supabase
-      .from("documents")
+      .from(PUBLICATIONS_TABLE)
       .select(
         "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
       )
@@ -180,7 +181,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
           if (rowsToInsert.length > 0) {
             const { error: importError } = await supabase
-              .from("documents")
+              .from(PUBLICATIONS_TABLE)
               .insert(rowsToInsert);
 
             if (importError) {
@@ -201,13 +202,13 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     if (importedLegacyDocuments) {
       const { data: reloaded, error: reloadError } = shouldFetchAll
         ? await supabase
-            .from("documents")
+            .from(PUBLICATIONS_TABLE)
             .select(
               "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
             )
             .order("created_at", { ascending: false })
         : await supabase
-            .from("documents")
+            .from(PUBLICATIONS_TABLE)
             .select(
               "id,owner_id,title,description,autor,programa,anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
             )
@@ -284,7 +285,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { success: false, error: uploadResult.error.message };
       }
 
-      const { error } = await supabase.from("documents").insert({
+      const { error } = await supabase.from(PUBLICATIONS_TABLE).insert({
         owner_id: user.id,
         title: publication.title.trim(),
         description: publication.description.trim(),
@@ -331,7 +332,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (updates.file_name !== undefined) payload.file_name = updates.file_name;
       if (updates.file_size !== undefined) payload.file_size = updates.file_size;
 
-      const { error } = await supabase.from("documents").update(payload).eq("id", id);
+      const { error } = await supabase.from(PUBLICATIONS_TABLE).update(payload).eq("id", id);
 
       if (error) {
         return { success: false, error: error.message };
@@ -350,7 +351,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "El documento no existe" };
       }
 
-      const { error } = await supabase.from("documents").delete().eq("id", id);
+      const { error } = await supabase.from(PUBLICATIONS_TABLE).delete().eq("id", id);
 
       if (error) {
         return { success: false, error: error.message };

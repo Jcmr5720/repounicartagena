@@ -13,7 +13,7 @@ Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por
 
 ### Documentos
 
-- Se creó `public.documents`.
+- Se creó `public.cartagena_producto_producto`.
 - Se agregó el estado `disponible | suspendido`.
 - Se conectó la gestión de documentos a Supabase Database y Supabase Storage.
 - Se protegieron las operaciones con RLS.
@@ -60,7 +60,7 @@ Ese archivo incluye:
 
 - enums de rol y estado,
 - triggers de sincronización con Auth,
-- policies RLS para `cartagena_usuario_usuario` y `documents`,
+- policies RLS para `cartagena_usuario_usuario` y `cartagena_producto_producto`,
 - policies del bucket de Storage `documents`.
 
 ## Verificación
