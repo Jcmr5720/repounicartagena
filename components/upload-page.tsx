@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth-context";
 import { usePublications } from "@/lib/publications-context";
-import { useSupabase } from "@/lib/supabase/provider";
 import {
   PROGRAMAS_ACADEMICOS,
   LINEAS_TEMATICAS,
@@ -76,7 +75,6 @@ export function UploadPage() {
     isLoading: publicationsLoading,
     refreshPublications,
   } = usePublications();
-  const supabase = useSupabase();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const programOptions =
     programas.length > 0
@@ -96,7 +94,7 @@ export function UploadPage() {
       setFormData({
         titulo: editingPublication.titulo,
         autor: editingPublication.autor,
-        programa: editingPublication.programa,
+        programa: editingPublication.programa_id,
         año: editingPublication.año.toString(),
         lineaTematica: editingPublication.lineaTematica,
         resumen: editingPublication.resumen,
@@ -163,7 +161,8 @@ export function UploadPage() {
               No tienes permisos para subir documentos
             </h2>
             <p className="text-muted-foreground">
-              Tu rol actual solo puede ver y moderar documentos. Si necesitas cargar contenido, pide que te asignen el rol adecuado.
+              Tu rol actual solo puede ver y moderar documentos. Si necesitas
+              cargar contenido, pide que te asignen el rol adecuado.
             </p>
           </CardContent>
         </Card>
@@ -197,14 +196,6 @@ export function UploadPage() {
     setSubmitStatus(null);
     setMessage("");
 
-    const client = supabase;
-    if (!client) {
-      setSubmitStatus("error");
-      setMessage("Supabase no está disponible.");
-      setIsSubmitting(false);
-      return;
-    }
-
     const payload = {
       titulo: formData.titulo.trim(),
       autor: formData.autor.trim(),
@@ -220,47 +211,38 @@ export function UploadPage() {
 
     try {
       if (editingPublication) {
-        const updates: Partial<Publication> = {
-          title: payload.titulo,
-          titulo: payload.titulo,
-          autor: payload.autor,
-          programa: payload.programa,
-          año: payload.año,
-          lineaTematica: payload.lineaTematica,
-          description: payload.resumen,
-          resumen: payload.resumen,
-          palabrasClave: payload.palabrasClave,
-        };
-
-        const updateResult = await updatePublication(editingPublication.id, updates);
-        if (!updateResult.success) {
-          throw new Error(updateResult.error || "No se pudo actualizar el documento");
-        }
-
         if (selectedFile) {
-          const newPath = `${user.id}/${crypto.randomUUID()}-${selectedFile.name.replace(/[^a-zA-Z0-9._-]+/g, "-")}`;
-          const uploadResult = await client.storage.from("documents").upload(newPath, selectedFile, {
-            contentType: selectedFile.type || "application/pdf",
-            upsert: false,
+          const uploadResult = await addPublication({
+            document_id: editingPublication.id,
+            title: payload.titulo,
+            description: payload.resumen,
+            autor: payload.autor,
+            programa_id: payload.programa,
+            anio: payload.año,
+            lineaTematica: payload.lineaTematica,
+            palabrasClave: payload.palabrasClave,
+            file: selectedFile,
           });
 
-          if (uploadResult.error) {
-            throw new Error(uploadResult.error.message);
+          if (!uploadResult.success) {
+            throw new Error(uploadResult.error || "No se pudo reemplazar el archivo");
           }
+        } else {
+          const updates: Partial<Publication> = {
+            title: payload.titulo,
+            titulo: payload.titulo,
+            autor: payload.autor,
+            programa_id: payload.programa,
+            año: payload.año,
+            lineaTematica: payload.lineaTematica,
+            description: payload.resumen,
+            resumen: payload.resumen,
+            palabrasClave: payload.palabrasClave,
+          };
 
-          const replaceResult = await updatePublication(editingPublication.id, {
-            storage_path: newPath,
-            file_name: selectedFile.name,
-            file_size: selectedFile.size,
-          });
-
-          if (!replaceResult.success) {
-            await client.storage.from("documents").remove([newPath]);
-            throw new Error(replaceResult.error || "No se pudo reemplazar el archivo");
-          }
-
-          if (editingPublication.storage_path) {
-            await client.storage.from("documents").remove([editingPublication.storage_path]);
+          const updateResult = await updatePublication(editingPublication.id, updates);
+          if (!updateResult.success) {
+            throw new Error(updateResult.error || "No se pudo actualizar el documento");
           }
         }
 
@@ -273,11 +255,12 @@ export function UploadPage() {
 
         const result = await addPublication({
           title: payload.titulo,
-          ...payload,
           description: payload.resumen,
-          titulo: payload.titulo,
-          resumen: payload.resumen,
-          estado: "disponible",
+          autor: payload.autor,
+          programa_id: payload.programa,
+          año: payload.año,
+          lineaTematica: payload.lineaTematica,
+          palabrasClave: payload.palabrasClave,
           file: selectedFile,
         });
 
@@ -340,7 +323,7 @@ export function UploadPage() {
           </h1>
           <p className="mt-2 text-muted-foreground">
             {editingPublication
-              ? "Actualiza la información del documento y, si lo necesitas, reemplaza el PDF."
+              ? "Actualiza la informaci\u00f3n del documento y, si lo necesitas, reemplaza el PDF."
               : "Completa el formulario para publicar un recurso digital."}
           </p>
         </div>
@@ -413,7 +396,7 @@ export function UploadPage() {
               >
                 <option value="">Selecciona programa</option>
                 {programOptions.map((prog) => (
-                  <option key={prog.id} value={prog.nombre}>
+                  <option key={prog.id} value={prog.id}>
                     {prog.nombre}
                   </option>
                 ))}
@@ -642,7 +625,8 @@ export function UploadPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El documento será eliminado permanentemente del repositorio.
+              Esta acción no se puede deshacer. El documento será eliminado
+              permanentemente del repositorio.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

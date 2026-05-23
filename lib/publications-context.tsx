@@ -11,26 +11,28 @@ import {
   type ReactNode,
 } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { supabaseConfig } from "@/lib/supabase/client";
 import { useSupabase } from "@/lib/supabase/provider";
 import { canViewAllDocuments } from "@/lib/permissions";
-import type { AcademicProgram, Document, Publication } from "./types";
+import type { AcademicProgram, Publication } from "./types";
 
 interface PublicationsContextType {
   publications: Publication[];
   programas: AcademicProgram[];
   isLoading: boolean;
   addPublication: (
-    publication: Omit<
-      Document,
-      | "id"
-      | "owner_id"
-      | "programa_id"
-      | "status"
-      | "storage_path"
-      | "pdfUrl"
-      | "created_at"
-      | "updated_at"
-    > & { file: File },
+    publication: {
+      title: string;
+      description: string;
+      autor: string;
+      programa_id: string;
+      anio?: number;
+      año?: number;
+      lineaTematica: string;
+      palabrasClave: string[];
+      file: File;
+      document_id?: string;
+    },
   ) => Promise<{ success: boolean; error?: string }>;
   updatePublication: (
     id: string,
@@ -160,6 +162,22 @@ function normalizeProgramName(programa: string) {
 
 function normalizeQuery(query: string) {
   return query.trim().toLowerCase();
+}
+
+async function readResponseMessage(response: Response) {
+  try {
+    const payload = await response.json();
+    if (payload && typeof payload.error === "string") {
+      return payload.error;
+    }
+    if (payload && typeof payload.message === "string") {
+      return payload.message;
+    }
+  } catch {
+    // Ignore non-JSON bodies.
+  }
+
+  return response.statusText || "No se pudo completar la subida";
 }
 
 export function PublicationsProvider({ children }: { children: ReactNode }) {
@@ -385,78 +403,74 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   }, [loadPublications]);
 
   const addPublication = useCallback(
-      async (
-        publication: Omit<
-          Document,
-          | "id"
-          | "owner_id"
-          | "programa_id"
-          | "status"
-          | "storage_path"
-          | "pdfUrl"
-          | "created_at"
-          | "updated_at"
-        > & { file: File },
-      ) => {
+    async (publication: {
+      title: string;
+      description: string;
+      autor: string;
+      programa_id: string;
+      anio?: number;
+      año?: number;
+      lineaTematica: string;
+      palabrasClave: string[];
+      file: File;
+      document_id?: string;
+    }) => {
       if (!supabase) {
         return { success: false, error: "Supabase no está disponible" };
       }
 
-      if (!user) {
-        return { success: false, error: "Debes iniciar sesiÃ³n para subir documentos" };
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        return { success: false, error: sessionError.message };
       }
 
-      const fileExtension = publication.file.name.split(".").pop() || "pdf";
-      const sanitizedName = publication.file.name.replace(/[^a-zA-Z0-9._-]+/g, "-");
-      const storagePath = `${user.id}/${crypto.randomUUID()}-${sanitizedName || "documento"}.${fileExtension}`;
-
-      const uploadResult = await supabase.storage
-        .from(DOCUMENTS_BUCKET)
-        .upload(storagePath, publication.file, {
-          contentType: publication.file.type || "application/pdf",
-          upsert: false,
-        });
-
-      if (uploadResult.error) {
-        return { success: false, error: uploadResult.error.message };
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        return { success: false, error: "Debes iniciar sesión para subir documentos" };
       }
 
-      const { id: programaId, error: programaError } = await resolveProgramId(
-        publication.programa,
+      if (!supabaseConfig.url) {
+        return { success: false, error: "Supabase no está configurado" };
+      }
+
+      const formData = new FormData();
+      formData.append("file", publication.file);
+      formData.append("title", publication.title.trim());
+      formData.append("autor", publication.autor.trim());
+      formData.append("programa_id", publication.programa_id);
+      const publicationYear = publication.anio ?? publication.año;
+      if (publicationYear === undefined || publicationYear === null || Number.isNaN(publicationYear)) {
+        return { success: false, error: "El año del documento es obligatorio" };
+      }
+
+      formData.append("anio", publicationYear.toString());
+      formData.append("linea_tematica", publication.lineaTematica.trim());
+      formData.append("resumen", publication.description.trim());
+      formData.append("palabras_clave", JSON.stringify(publication.palabrasClave));
+
+      if (publication.document_id) {
+        formData.append("document_id", publication.document_id);
+      }
+
+      const response = await fetch(
+        `${supabaseConfig.url}/functions/v1/cartagena_upload`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: formData,
+        },
       );
 
-      if (programaError || !programaId) {
-        await supabase.storage.from(DOCUMENTS_BUCKET).remove([storagePath]);
-        return {
-          success: false,
-          error: programaError || "No se pudo resolver el programa seleccionado",
-        };
-      }
-
-      const { error } = await supabase.from(PUBLICATIONS_TABLE).insert({
-        owner_id: user.id,
-        title: publication.title.trim(),
-        description: publication.description.trim(),
-        autor: publication.autor.trim(),
-        programa_id: programaId,
-        anio: publication.año,
-        linea_tematica: publication.lineaTematica.trim(),
-        palabras_clave: publication.palabrasClave,
-        status: "disponible",
-        storage_path: storagePath,
-        file_name: publication.file.name,
-        file_size: publication.file.size,
-      });
-
-      if (error) {
-        await supabase.storage.from(DOCUMENTS_BUCKET).remove([storagePath]);
-        return { success: false, error: error.message };
+      if (!response.ok) {
+        return { success: false, error: await readResponseMessage(response) };
       }
 
       await loadPublications();
       return { success: true };
     },
-    [loadPublications, resolveProgramId, supabase, user],
+    [loadPublications, supabase],
   );
 
   const updatePublication = useCallback(
@@ -472,7 +486,9 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (updates.description !== undefined) payload.description = updates.description.trim();
       if (updates.resumen !== undefined) payload.description = updates.resumen.trim();
       if (updates.autor !== undefined) payload.autor = updates.autor.trim();
-      if (updates.programa !== undefined) {
+      if (updates.programa_id !== undefined) {
+        payload.programa_id = updates.programa_id;
+      } else if (updates.programa !== undefined) {
         const { id: programaId, error: programaError } = await resolveProgramId(
           updates.programa,
         );
