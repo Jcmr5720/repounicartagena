@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -167,6 +168,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   const [publications, setPublications] = useState<Publication[]>([]);
   const [programas, setProgramas] = useState<AcademicProgram[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const programasRef = useRef<AcademicProgram[]>([]);
 
   const resolveProgramId = useCallback(
     async (programaNombre: string) => {
@@ -180,7 +182,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { error: "Debes seleccionar un programa" };
       }
 
-      const cachedProgram = programas.find((programa) => programa.nombre === normalizedName);
+      const cachedProgram = programasRef.current.find((programa) => programa.nombre === normalizedName);
       if (cachedProgram) {
         return { id: cachedProgram.id };
       }
@@ -201,7 +203,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
       return { id: (data as SupabaseProgramRow).id };
     },
-    [programas, supabase],
+    [supabase],
   );
 
   const loadPrograms = useCallback(async () => {
@@ -224,6 +226,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     const rows = ((data ?? []) as SupabaseProgramRow[]).sort((left, right) =>
       left.nombre.localeCompare(right.nombre, "es"),
     );
+    programasRef.current = rows;
     setProgramas(rows);
     return rows;
   }, [supabase]);

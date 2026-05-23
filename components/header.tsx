@@ -41,6 +41,7 @@ export function Header() {
                 width={48}
                 height={48}
                 className="h-12 w-auto"
+                style={{ width: "auto", height: "48px" }}
               />
               <div className="flex flex-col">
                 <span className="text-left text-lg font-bold text-foreground">

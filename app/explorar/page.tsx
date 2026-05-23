@@ -1,15 +1,16 @@
 import { ExplorePage } from "@/components/explore-page";
 
 interface ExploreRouteProps {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string | string[];
-  };
+  }>;
 }
 
-export default function Page({ searchParams }: ExploreRouteProps) {
-  const queryParam = Array.isArray(searchParams?.query)
-    ? searchParams?.query[0]
-    : searchParams?.query;
+export default async function Page({ searchParams }: ExploreRouteProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const queryParam = Array.isArray(resolvedSearchParams?.query)
+    ? resolvedSearchParams?.query[0]
+    : resolvedSearchParams?.query;
 
   return <ExplorePage initialSearch={queryParam ?? ""} />;
 }

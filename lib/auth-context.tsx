@@ -32,7 +32,9 @@ interface AuthContextType {
   register: (data: RegisterInput) => Promise<AuthResult>;
   loginWithGoogle: (nextPath?: string) => Promise<AuthResult>;
   logout: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => Promise<AuthResult>;
+  updateUser: (
+    userData: Partial<Pick<User, "email" | "username" | "full_name" | "telefono">>,
+  ) => Promise<AuthResult>;
   updateUserRole: (userId: string, role: UserRole) => Promise<AuthResult>;
 }
 
@@ -96,7 +98,6 @@ function mapAuthUserToAppUser(
     username,
     full_name: fullName,
     role: profile?.role ?? "estudiante",
-    programa: profile?.programa ?? "",
     telefono: profile?.telefono ?? "",
     created_at: profile?.created_at ?? authUser.created_at ?? new Date().toISOString(),
     updated_at: profile?.updated_at ?? new Date().toISOString(),
@@ -175,7 +176,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await client
         .from("cartagena_usuario_usuario")
-        .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
+        .select("id,email,username,full_name,role,telefono,created_at,updated_at")
         .eq("id", sessionUser.id)
         .maybeSingle();
 
@@ -187,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await ensureProfile(sessionUser);
         const { data: fallbackProfile } = await client
           .from("cartagena_usuario_usuario")
-          .select("id,email,username,full_name,role,programa,telefono,created_at,updated_at")
+          .select("id,email,username,full_name,role,telefono,created_at,updated_at")
           .eq("id", sessionUser.id)
           .maybeSingle();
 
@@ -234,8 +235,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = authClient.onAuthStateChange((_event, session) => {
-      void loadProfile(session?.user ?? null);
-      setIsLoading(false);
+      setIsLoading(true);
+      void loadProfile(session?.user ?? null).finally(() => {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
     });
 
     return () => {
@@ -353,7 +358,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const updateUser = async (userData: Partial<User>): Promise<AuthResult> => {
+  const updateUser = async (
+    userData: Partial<Pick<User, "email" | "username" | "full_name" | "telefono">>,
+  ): Promise<AuthResult> => {
     if (!authClient || !client) {
       return { success: false, error: "Supabase no está disponible" };
     }
@@ -388,13 +395,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ]) ??
         deriveUsernameFromEmail(authUser.email),
     );
-    const nextPrograma = normalizeText(
-      userData.programa ??
-        user?.programa ??
-        readMetadataValue((authUser.user_metadata ?? {}) as Record<string, unknown>, [
-          "programa",
-        ]),
-    );
     const nextTelefono = normalizeText(
       userData.telefono ??
         user?.telefono ??
@@ -419,7 +419,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: nextEmail || authUser.email || "",
         full_name: nextNombre,
         username: nextUsuario,
-        programa: nextPrograma,
         telefono: nextTelefono,
       })
       .eq("id", authUser.id);

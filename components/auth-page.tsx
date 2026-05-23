@@ -26,6 +26,7 @@ export function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next") || "/";
+  const safeNextPath = nextPath.startsWith("/auth") ? "/" : nextPath;
   const { user, isLoading, login, register, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState("");
@@ -45,9 +46,9 @@ export function AuthPage() {
 
   useEffect(() => {
     if (user) {
-      router.replace(nextPath);
+      router.replace(safeNextPath);
     }
-  }, [nextPath, router, user]);
+  }, [router, safeNextPath, user]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -60,7 +61,6 @@ export function AuthPage() {
     if (result.success) {
       setSuccess("Sesion iniciada correctamente.");
       setIsSubmitting(false);
-      router.replace(nextPath);
       return;
     }
 
@@ -94,9 +94,6 @@ export function AuthPage() {
           : "Cuenta creada correctamente.",
       );
       setIsSubmitting(false);
-      if (!result.needsVerification) {
-        router.replace(nextPath);
-      }
       return;
     }
 
@@ -109,7 +106,7 @@ export function AuthPage() {
     setSuccess("");
     setIsSubmitting(true);
 
-    const result = await loginWithGoogle(nextPath);
+    const result = await loginWithGoogle(safeNextPath);
 
     if (!result.success) {
       setError(result.error || "No se pudo iniciar sesion con Google.");

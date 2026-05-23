@@ -2,20 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { User, Mail, Phone, BookOpen, Save, Shield } from "lucide-react";
+import { User, Mail, Phone, Save, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { PROGRAMAS_ACADEMICOS, ROLE_LABELS, type User } from "@/lib/types";
+import { ROLE_LABELS, type User } from "@/lib/types";
 export function AccountPage() {
   const { user, isLoading } = useAuth();
 
@@ -58,7 +51,6 @@ export function AccountPage() {
 function AccountForm({ user }: { user: User }) {
   const { updateUser } = useAuth();
   const [email, setEmail] = useState(user.email);
-  const [programa, setPrograma] = useState(user.programa);
   const [telefono, setTelefono] = useState(user.telefono);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -68,7 +60,7 @@ function AccountForm({ user }: { user: User }) {
     setIsSaving(true);
     setSaveError("");
 
-    const result = await updateUser({ email, programa, telefono });
+    const result = await updateUser({ email, telefono });
 
     if (!result.success) {
       setSaveError(result.error || "No se pudieron guardar los cambios");
@@ -126,25 +118,6 @@ function AccountForm({ user }: { user: User }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="correo@redscolombia.co"
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="programa" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Programa académico
-            </Label>
-            <Select value={programa} onValueChange={setPrograma}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona tu programa" />
-              </SelectTrigger>
-              <SelectContent>
-                {PROGRAMAS_ACADEMICOS.map((prog) => (
-                  <SelectItem key={prog} value={prog}>
-                    {prog}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
