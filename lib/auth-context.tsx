@@ -48,6 +48,24 @@ function normalizeUsername(value: string) {
   return normalizeText(value).toLowerCase();
 }
 
+function normalizeRedirectPath(nextPath?: string | null) {
+  if (!nextPath) {
+    return "/";
+  }
+
+  const trimmed = nextPath.trim();
+
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return "/";
+  }
+
+  if (trimmed.startsWith("/auth")) {
+    return "/";
+  }
+
+  return trimmed;
+}
+
 function deriveUsernameFromEmail(email?: string | null) {
   if (!email) {
     return "usuario";
@@ -328,7 +346,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: "Supabase no está disponible" };
     }
 
-    const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(nextPath)}`;
+    const safeNextPath = normalizeRedirectPath(nextPath);
+    const redirectTo = `${window.location.origin}/auth?next=${encodeURIComponent(safeNextPath)}`;
 
     const { error } = await authClient.signInWithOAuth({
       provider: "google",

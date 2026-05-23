@@ -22,11 +22,28 @@ import { useAuth } from "@/lib/auth-context";
 
 type AuthMode = "login" | "register";
 
+function normalizeRedirectPath(nextPath: string | null) {
+  if (!nextPath) {
+    return "/";
+  }
+
+  const trimmed = nextPath.trim();
+
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return "/";
+  }
+
+  if (trimmed.startsWith("/auth")) {
+    return "/";
+  }
+
+  return trimmed;
+}
+
 export function AuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/";
-  const safeNextPath = nextPath.startsWith("/auth") ? "/" : nextPath;
+  const safeNextPath = normalizeRedirectPath(searchParams.get("next"));
   const { user, isLoading, login, register, loginWithGoogle } = useAuth();
   const [mode, setMode] = useState<AuthMode>("login");
   const [error, setError] = useState("");
