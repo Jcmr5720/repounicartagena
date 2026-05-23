@@ -2,8 +2,6 @@ begin;
 
 alter table if exists public.documents rename to cartagena_producto_producto;
 
-delete from public.cartagena_producto_producto;
-
 alter table public.cartagena_producto_producto enable row level security;
 
 drop trigger if exists set_documents_updated_at on public.cartagena_producto_producto;

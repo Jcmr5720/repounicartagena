@@ -4,27 +4,16 @@ import Link from "next/link";
 import { AlertCircle, ArrowLeft, Download } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { usePublications } from "@/lib/publications-context";
+import type { Publication } from "@/lib/types";
 import { PublicationDetailContent } from "./publication-detail-content";
 
 interface PublicationDetailPageProps {
-  publicationId: string;
+  publication: Publication | null;
 }
 
 export function PublicationDetailPage({
-  publicationId,
+  publication,
 }: PublicationDetailPageProps) {
-  const { getPublicationById, isLoading } = usePublications();
-  const publication = getPublicationById(publicationId);
-
-  if (isLoading) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="h-96 animate-pulse rounded-lg bg-muted" />
-      </div>
-    );
-  }
-
   if (!publication) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
@@ -37,7 +26,7 @@ export function PublicationDetailPage({
               Publicación no encontrada
             </h2>
             <p className="mb-6 text-muted-foreground">
-              El recurso digital solicitado no existe o no esta disponible todavia.
+              El recurso digital solicitado no existe o no está disponible todavía.
             </p>
             <Button asChild>
               <Link href="/explorar">Volver a explorar</Link>
