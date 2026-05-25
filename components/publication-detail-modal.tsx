@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Calendar, User, Tag, BookOpen, FileText } from "lucide-react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -113,7 +114,9 @@ export function PublicationDetailModal({
           {/* Publication date */}
           <div className="text-sm text-muted-foreground">
             Publicado el{" "}
-            {new Date(publication.fechaPublicacion).toLocaleDateString("es-CO", {
+            {new Date(
+              publication.fechaPublicacion ?? publication.created_at,
+            ).toLocaleDateString("es-CO", {
               day: "numeric",
               month: "long",
               year: "numeric",
@@ -122,10 +125,19 @@ export function PublicationDetailModal({
 
           {/* Actions */}
           <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row">
-            <Button className="flex-1 gap-2">
-              <Download className="h-4 w-4" />
-              Descargar PDF
-            </Button>
+            {publication.pdfUrl ? (
+              <Button asChild className="flex-1 gap-2">
+                <Link href={publication.pdfUrl} target="_blank" rel="noreferrer">
+                  <Download className="h-4 w-4" />
+                  Descargar PDF
+                </Link>
+              </Button>
+            ) : (
+              <Button disabled className="flex-1 gap-2">
+                <Download className="h-4 w-4" />
+                Descargar PDF
+              </Button>
+            )}
             <Button
               variant="outline"
               className="flex-1"

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -55,7 +55,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por titulo, autor, programa, palabra clave o anio..."
+                  placeholder="Buscar por titulo, autor, programa, palabra clave o año..."
                   className="h-14 pl-12 pr-4 text-base shadow-sm"
                 />
               </div>

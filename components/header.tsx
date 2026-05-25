@@ -7,7 +7,12 @@ import { usePathname } from "next/navigation";
 import { Menu, X, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { canManageDocuments, canSuspendDocuments, isAdmin } from "@/lib/permissions";
+import {
+  canManageDocuments,
+  canSuspendDocuments,
+  canViewAllDocuments,
+  isAdmin,
+} from "@/lib/permissions";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -18,6 +23,7 @@ export function Header() {
     { label: "Inicio", href: "/" },
     { label: "Explorar", href: "/explorar" },
     ...(canManageDocuments(user) ? [{ label: "Subir REDS", href: "/subir" }] : []),
+    ...(canViewAllDocuments(user) ? [{ label: "Gestion", href: "/gestion-publicaciones" }] : []),
     { label: "Mi cuenta", href: "/cuenta" },
   ];
 
@@ -76,7 +82,7 @@ export function Header() {
                       : "text-foreground/70 hover:bg-muted hover:text-foreground"
                   }`}
                 >
-                  Moderación
+                  Moderacion
                 </Link>
               )}
               {isAdmin(user) && (
@@ -102,19 +108,14 @@ export function Header() {
                     <User className="h-4 w-4" />
                     {user.username}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={logout}
-                    className="gap-1"
-                  >
+                  <Button variant="outline" size="sm" onClick={logout} className="gap-1">
                     <LogOut className="h-4 w-4" />
-                    Cerrar sesión
+                    Cerrar sesion
                   </Button>
                 </div>
               ) : (
                 <Button asChild>
-                  <Link href="/auth">Iniciar sesión</Link>
+                  <Link href="/auth">Iniciar sesion</Link>
                 </Button>
               )}
             </div>
@@ -123,11 +124,7 @@ export function Header() {
               className="rounded-md p-2 text-foreground md:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
@@ -159,7 +156,7 @@ export function Header() {
                       : "text-foreground/70 hover:bg-muted"
                   }`}
                 >
-                  Moderación
+                  Moderacion
                 </Link>
               )}
               {isAdmin(user) && (
@@ -182,20 +179,15 @@ export function Header() {
                       <User className="h-4 w-4" />
                       {user.username}
                     </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={logout}
-                      className="ml-3 gap-1"
-                    >
+                    <Button variant="outline" size="sm" onClick={logout} className="ml-3 gap-1">
                       <LogOut className="h-4 w-4" />
-                      Cerrar sesión
+                      Cerrar sesion
                     </Button>
                   </div>
                 ) : (
                   <Button asChild className="ml-3">
                     <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                      Iniciar sesión
+                      Iniciar sesion
                     </Link>
                   </Button>
                 )}

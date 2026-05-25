@@ -87,14 +87,13 @@ export function PublicationsSection() {
                   <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {new Date(publication.fechaPublicacion).toLocaleDateString(
-                        "es-CO",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
+                      {new Date(
+                        publication.fechaPublicacion ?? publication.created_at,
+                      ).toLocaleDateString("es-CO", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                     <Button
                       asChild

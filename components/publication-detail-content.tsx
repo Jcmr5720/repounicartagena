@@ -66,11 +66,14 @@ export function PublicationDetailContent({
 
       <div className="text-sm text-muted-foreground">
         Publicado el{" "}
-        {new Date(publication.fechaPublicacion).toLocaleDateString("es-CO", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })}
+        {new Date(publication.fechaPublicacion ?? publication.created_at).toLocaleDateString(
+          "es-CO",
+          {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          },
+        )}
       </div>
     </div>
   );

@@ -42,6 +42,13 @@ export function AdminPage() {
       return;
     }
 
+    if (!supabase) {
+      setErrorMessage("Supabase no está disponible");
+      setProfiles([]);
+      setProfilesLoading(false);
+      return;
+    }
+
     const loadProfiles = async () => {
       setProfilesLoading(true);
       const { data, error } = await supabase
@@ -103,6 +110,11 @@ export function AdminPage() {
   }
 
   const handleRoleChange = async (profileId: string, nextRole: UserRole) => {
+    if (!supabase) {
+      setErrorMessage("Supabase no está disponible");
+      return;
+    }
+
     setSavingRoleFor(profileId);
     setErrorMessage("");
 
@@ -147,7 +159,7 @@ export function AdminPage() {
             </Link>
           </Button>
           <Button asChild>
-            <Link href="/subir">Administrar documentos</Link>
+            <Link href="/gestion-publicaciones">Gestionar publicaciones</Link>
           </Button>
         </div>
       </div>

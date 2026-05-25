@@ -3,6 +3,7 @@ import type { Publication } from "@/lib/types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+const DOCUMENTS_BUCKET = "documents";
 
 const PUBLICATIONS_TABLE = "cartagena_producto_producto";
 
@@ -35,6 +36,10 @@ function mapRowToPublication(row: SupabasePublicationRow): Publication {
   const programa = Array.isArray(row.programa)
     ? row.programa[0]
     : row.programa;
+  const publicUrl =
+    row.storage_path && row.storage_path.trim()
+      ? getSupabaseClient()?.storage.from(DOCUMENTS_BUCKET).getPublicUrl(row.storage_path).data.publicUrl
+      : undefined;
 
   return {
     id: row.id,
@@ -54,6 +59,7 @@ function mapRowToPublication(row: SupabasePublicationRow): Publication {
     storage_path: row.storage_path ?? "",
     file_name: row.file_name,
     file_size: row.file_size,
+    pdfUrl: publicUrl,
     fechaPublicacion: row.created_at,
     created_at: row.created_at,
     updated_at: row.updated_at,

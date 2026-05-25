@@ -1,21 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ShieldAlert, FileText, ArrowRight, AlertCircle, RefreshCw } from "lucide-react";
+import { useMemo } from "react";
+import { ShieldAlert, FileText, ArrowRight, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
 import { usePublications } from "@/lib/publications-context";
 import { canSuspendDocuments, isAdmin } from "@/lib/permissions";
-import { DOCUMENT_STATUS_LABELS } from "@/lib/types";
 
 export function ModerationPage() {
   const { user, isLoading } = useAuth();
-  const { publications, updatePublication, isLoading: publicationsLoading } = usePublications();
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const { publications, isLoading: publicationsLoading } = usePublications();
 
   const counts = useMemo(() => {
     return {
@@ -44,7 +40,7 @@ export function ModerationPage() {
               Acceso restringido
             </h2>
             <p className="text-muted-foreground">
-              Solo moderadores y administradores pueden suspender o reactivar documentos.
+              Solo moderadores y administradores pueden entrar a esta seccion.
             </p>
           </CardContent>
         </Card>
@@ -52,53 +48,35 @@ export function ModerationPage() {
     );
   }
 
-  const toggleStatus = async (publicationId: string, currentStatus: "disponible" | "suspendido") => {
-    setUpdatingId(publicationId);
-    setErrorMessage("");
-
-    const nextStatus = currentStatus === "disponible" ? "suspendido" : "disponible";
-    const result = await updatePublication(publicationId, { status: nextStatus, estado: nextStatus });
-
-    if (!result.success) {
-      setErrorMessage(result.error || "No se pudo actualizar el estado del documento");
-    }
-
-    setUpdatingId(null);
-  };
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
             <ShieldAlert className="h-8 w-8 text-primary" />
-            Moderación de documentos
+            Moderacion de documentos
           </h1>
-          <p className="mt-2 text-muted-foreground">
-            Suspende o reactiva documentos publicados por la comunidad.
+          <p className="mt-2 max-w-2xl text-muted-foreground">
+            Usa la vista unificada para buscar, filtrar y aplicar las acciones permitidas segun tu rol.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           {isAdmin(user) ? (
             <Button asChild variant="outline">
               <Link href="/admin">
-                Panel de administración
+                Panel de administracion
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           ) : null}
           <Button asChild>
-            <Link href="/subir">Administrar documentos</Link>
+            <Link href="/gestion-publicaciones">
+              Ir a gestion de publicaciones
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </Button>
         </div>
       </div>
-
-      {errorMessage ? (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-300">
-          <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
-      ) : null}
 
       <div className="mb-8 grid gap-4 md:grid-cols-2">
         <Card className="border-border">
@@ -130,50 +108,24 @@ export function ModerationPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Lista de documentos
+            Acceso rapido
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {publications.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              No hay documentos para moderar
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {publications.map((publication) => (
-                <div
-                  key={publication.id}
-                  className="flex flex-col gap-4 rounded-lg border border-border p-4 lg:flex-row lg:items-center lg:justify-between"
-                >
-                  <div className="flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-medium text-foreground line-clamp-1">
-                        {publication.titulo}
-                      </h4>
-                      <Badge
-                        variant={publication.status === "disponible" ? "default" : "secondary"}
-                      >
-                        {DOCUMENT_STATUS_LABELS[publication.status]}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {publication.autor} • {publication.programa} • {publication.año}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={publication.status === "disponible" ? "secondary" : "default"}
-                      onClick={() => toggleStatus(publication.id, publication.status)}
-                      disabled={updatingId === publication.id}
-                    >
-                      {publication.status === "disponible" ? "Suspender" : "Reactivar"}
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="font-medium text-foreground">
+              La vista unificada concentra busqueda, filtros y acciones por rol.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Entra para revisar publicaciones, suspender, reactivar, editar o eliminar segun permisos.
+            </p>
+          </div>
+          <Button asChild className="gap-2">
+            <Link href="/gestion-publicaciones">
+              Abrir gestion
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>
