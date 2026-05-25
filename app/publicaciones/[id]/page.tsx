@@ -2,7 +2,7 @@ import { PublicationDetailPage } from "@/components/publication-detail-page";
 import { getPublicationById } from "@/lib/supabase/publications";
 
 interface PublicationRouteProps {
-  params?:
+  params:
     | Promise<{
         id: string;
       }>

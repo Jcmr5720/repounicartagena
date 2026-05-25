@@ -10,7 +10,7 @@ export function Footer() {
               Repositorio REDS Colombia
             </h3>
             <p className="mt-2 text-base text-muted-foreground">
-              Plataforma para la consulta y publicacion de recursos digitales
+              Plataforma para la consulta y publicación de recursos digitales
               de REDS Colombia.
             </p>
           </div>
@@ -20,10 +20,18 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <Link
+                  href="/como-funciona"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Cómo funciona
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/explorar"
                   className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
-                  Políticas del repositorio
+                  Explorar recursos
                 </Link>
               </li>
               <li>
@@ -31,7 +39,7 @@ export function Footer() {
                   href="/cuenta"
                   className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
-                  Ayuda
+                  Mi cuenta
                 </Link>
               </li>
               <li>
@@ -40,14 +48,6 @@ export function Footer() {
                   className="text-base text-muted-foreground transition-colors hover:text-primary"
                 >
                   Contacto
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/"
-                  className="text-base text-muted-foreground transition-colors hover:text-primary"
-                >
-                  Accesibilidad
                 </Link>
               </li>
             </ul>

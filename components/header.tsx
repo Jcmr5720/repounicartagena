@@ -4,15 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, Menu, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth-context";
 import {
-  canManageDocuments,
-  canSuspendDocuments,
-  canViewAllDocuments,
-  isAdmin,
-} from "@/lib/permissions";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/lib/auth-context";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,9 +24,7 @@ export function Header() {
   const navItems = [
     { label: "Inicio", href: "/" },
     { label: "Explorar", href: "/explorar" },
-    ...(canManageDocuments(user) ? [{ label: "Subir REDS", href: "/subir" }] : []),
-    ...(canViewAllDocuments(user) ? [{ label: "Gestion", href: "/gestion-publicaciones" }] : []),
-    { label: "Mi cuenta", href: "/cuenta" },
+    { label: "Subir REDS", href: "/subir" },
   ];
 
   const isActive = (href: string) => {
@@ -39,7 +39,7 @@ export function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src="/images/logo.png"
@@ -73,46 +73,47 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              {canSuspendDocuments(user) && (
-                <Link
-                  href="/moderacion"
-                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
-                    isActive("/moderacion")
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  Moderacion
-                </Link>
-              )}
-              {isAdmin(user) && (
-                <Link
-                  href="/admin"
-                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${
-                    isActive("/admin")
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/70 hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  Admin
-                </Link>
-              )}
             </nav>
 
             <div className="hidden items-center gap-2 md:flex">
               {isLoading ? (
                 <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
               ) : user ? (
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-base text-foreground">
-                    <User className="h-4 w-4" />
-                    {user.username}
-                  </span>
-                  <Button variant="outline" size="sm" onClick={logout} className="gap-1">
-                    <LogOut className="h-4 w-4" />
-                    Cerrar sesion
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[10rem] truncate">{user.username}</span>
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel className="px-2 py-1.5 text-xs font-normal text-muted-foreground">
+                      {user.full_name}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/cuenta">Mi cuenta</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/gestion-publicaciones">Gestion publicaciones</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">Administrar</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        void logout();
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Cerrar sesión
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : (
                 <Button asChild>
                   <Link href="/auth">Iniciar sesion</Link>
@@ -146,44 +147,44 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
-              {canSuspendDocuments(user) && (
-                <Link
-                  href="/moderacion"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block w-full rounded-md px-3 py-2 text-left text-base font-medium ${
-                    isActive("/moderacion")
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/70 hover:bg-muted"
-                  }`}
-                >
-                  Moderacion
-                </Link>
-              )}
-              {isAdmin(user) && (
-                <Link
-                  href="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block w-full rounded-md px-3 py-2 text-left text-base font-medium ${
-                    isActive("/admin")
-                      ? "bg-primary/10 text-primary"
-                      : "text-foreground/70 hover:bg-muted"
-                  }`}
-                >
-                  Admin
-                </Link>
-              )}
               <div className="border-t border-border pt-2">
                 {user ? (
-                  <div className="space-y-2">
-                    <span className="flex items-center gap-1 px-3 text-sm text-foreground">
-                      <User className="h-4 w-4" />
-                      {user.username}
-                    </span>
-                    <Button variant="outline" size="sm" onClick={logout} className="ml-3 gap-1">
-                      <LogOut className="h-4 w-4" />
-                      Cerrar sesion
-                    </Button>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="ml-3 gap-1">
+                        <User className="h-4 w-4" />
+                        <span className="max-w-[12rem] truncate">{user.username}</span>
+                        <ChevronDown className="h-4 w-4 opacity-70" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56">
+                      <DropdownMenuLabel className="px-2 py-1.5 text-xs font-normal text-muted-foreground">
+                        {user.full_name}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild onSelect={() => setMobileMenuOpen(false)}>
+                        <Link href="/cuenta">Mi cuenta</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild onSelect={() => setMobileMenuOpen(false)}>
+                        <Link href="/gestion-publicaciones">Gestion publicaciones</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild onSelect={() => setMobileMenuOpen(false)}>
+                        <Link href="/admin">Administrar</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={(event) => {
+                          event.preventDefault();
+                          setMobileMenuOpen(false);
+                          void logout();
+                        }}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Cerrar sesión
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : (
                   <Button asChild className="ml-3">
                     <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>

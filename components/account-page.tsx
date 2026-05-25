@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth-context";
-import { ROLE_LABELS, type User } from "@/lib/types";
+import { ROLE_LABELS, type User as AppUser } from "@/lib/types";
 export function AccountPage() {
   const { user, isLoading } = useAuth();
 
@@ -48,7 +48,7 @@ export function AccountPage() {
   return <AccountForm key={user.username} user={user} />;
 }
 
-function AccountForm({ user }: { user: User }) {
+function AccountForm({ user }: { user: AppUser }) {
   const { updateUser } = useAuth();
   const [email, setEmail] = useState(user.email);
   const [telefono, setTelefono] = useState(user.telefono);
