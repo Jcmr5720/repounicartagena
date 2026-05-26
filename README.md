@@ -5,6 +5,8 @@ Guia operativa para agentes y contribuidores que trabajen en este proyecto.
 Este repositorio es una app web en Next.js pensada para publicar, explorar y administrar recursos digitales.  
 Antes de cambiar codigo, interfaz o textos, lee esta guia y respeta el lenguaje visual y editorial ya definido en el sitio.
 
+**Regla obligatoria:** antes de hacer cualquier cambio, leer siempre [`UI_STANDAR.MD`](./UI_STANDAR.MD). Ese archivo es la referencia visual oficial del proyecto.
+
 ## Que es este proyecto
 
 - Sitio web de recursos digitales para REDS Colombia.

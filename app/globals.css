@@ -4,6 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --app-font-scale: 1;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -37,6 +38,96 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.65 0.2 41);
+}
+
+html {
+  font-size: calc(100% * var(--app-font-scale));
+  transition: font-size 180ms ease;
+}
+
+html[data-text-size="large"] {
+  --app-font-scale: 1.25;
+}
+
+html[data-text-size="xlarge"] {
+  --app-font-scale: 1.5;
+}
+
+html[data-text-size="large"] body,
+html[data-text-size="xlarge"] body {
+  line-height: 1.9;
+}
+
+html[data-contrast="high"] {
+  color-scheme: dark;
+  --background: oklch(0.08 0 0);
+  --foreground: oklch(0.99 0 0);
+  --card: oklch(0.12 0 0);
+  --card-foreground: oklch(0.99 0 0);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.99 0 0);
+  --primary: oklch(0.93 0.18 96);
+  --primary-foreground: oklch(0.08 0 0);
+  --secondary: oklch(0.18 0 0);
+  --secondary-foreground: oklch(0.99 0 0);
+  --muted: oklch(0.16 0 0);
+  --muted-foreground: oklch(0.9 0 0);
+  --accent: oklch(0.22 0 0);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.76 0.24 28);
+  --destructive-foreground: oklch(0.08 0 0);
+  --border: oklch(0.7 0 0);
+  --input: oklch(0.14 0 0);
+  --ring: oklch(0.93 0.18 96);
+  --chart-1: oklch(0.93 0.18 96);
+  --chart-2: oklch(0.82 0.17 180);
+  --chart-3: oklch(0.88 0.15 255);
+  --chart-4: oklch(0.84 0.16 70);
+  --chart-5: oklch(0.8 0.2 25);
+  --sidebar: oklch(0.1 0 0);
+  --sidebar-foreground: oklch(0.99 0 0);
+  --sidebar-primary: oklch(0.93 0.18 96);
+  --sidebar-primary-foreground: oklch(0.08 0 0);
+  --sidebar-accent: oklch(0.16 0 0);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.7 0 0);
+  --sidebar-ring: oklch(0.93 0.18 96);
+}
+
+html[data-contrast="high"] body {
+  background-image:
+    linear-gradient(to right, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+html[data-contrast="high"] [data-slot="button"],
+html[data-contrast="high"] [data-slot="input"],
+html[data-contrast="high"] [data-slot="popover-content"],
+html[data-contrast="high"] [data-slot="switch"],
+html[data-contrast="high"] .rounded-lg,
+html[data-contrast="high"] .rounded-xl,
+html[data-contrast="high"] .rounded-2xl {
+  box-shadow: none;
+}
+
+html[data-contrast="high"] [data-slot="button"],
+html[data-contrast="high"] [data-slot="input"],
+html[data-contrast="high"] [data-slot="popover-content"],
+html[data-contrast="high"] [data-slot="card"],
+html[data-contrast="high"] header,
+html[data-contrast="high"] footer {
+  border-width: 2px;
+}
+
+html[data-contrast="high"] a {
+  text-decoration-thickness: 0.14em;
+  text-underline-offset: 0.22em;
+}
+
+html[data-contrast="high"] *:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
 }
 
 .dark {
@@ -119,7 +210,8 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground text-[17px] leading-7;
+    @apply bg-background text-foreground text-base leading-7;
   }
 }

@@ -5,6 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown, LogOut, Menu, User, X } from "lucide-react";
+import {
+  AccessibilityControls,
+  AccessibilityControlsMobile,
+} from "@/components/accessibility-controls";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -76,6 +80,7 @@ export function Header() {
             </nav>
 
             <div className="hidden items-center gap-2 md:flex">
+              <AccessibilityControls />
               {isLoading ? (
                 <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
               ) : user ? (
@@ -147,6 +152,7 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <AccessibilityControlsMobile />
               <div className="border-t border-border pt-2">
                 {user ? (
                   <DropdownMenu>

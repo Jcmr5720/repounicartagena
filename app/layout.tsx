@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "./providers";
 import { SiteShell } from "@/components/site-shell";
 import "./globals.css";
@@ -39,8 +40,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="bg-background">
+    <html lang="es" className="bg-background" suppressHydrationWarning>
       <body className={`${inter.variable} min-h-screen bg-background font-sans antialiased text-foreground`}>
+        <Script id="accessibility-init" strategy="beforeInteractive">
+          {`
+            (function () {
+              try {
+                var root = document.documentElement;
+                var contrast = localStorage.getItem('reds-accessibility-contrast') || 'normal';
+                var textSize = localStorage.getItem('reds-accessibility-text-size') || 'normal';
+                root.dataset.contrast = contrast === 'high' ? 'high' : 'normal';
+                root.dataset.textSize = (textSize === 'large' || textSize === 'xlarge') ? textSize : 'normal';
+              } catch (error) {}
+            })();
+          `}
+        </Script>
         <Providers>
           <SiteShell>{children}</SiteShell>
         </Providers>

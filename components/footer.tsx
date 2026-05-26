@@ -50,6 +50,22 @@ export function Footer() {
                   Contacto
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/politica-de-cookies"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Politica de cookies
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacidad"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Politica de privacidad
+                </Link>
+              </li>
             </ul>
           </div>
 

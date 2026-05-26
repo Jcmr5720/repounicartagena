@@ -1,12 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Filter, X, Calendar, User, Tag, ArrowRight, FileText } from "lucide-react";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {
+  ArrowRight,
+  Calendar,
+  FileText,
+  Filter,
+  Mic,
+  MicOff,
+  Search,
+  Tag,
+  User,
+  X,
+} from "lucide-react";
+import { useSpeech } from "@/hooks/use-speech";
+import { usePublications } from "@/lib/publications-context";
+import { LINEAS_TEMATICAS, PROGRAMAS_ACADEMICOS, type Publication } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -14,8 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePublications } from "@/lib/publications-context";
-import { PROGRAMAS_ACADEMICOS, LINEAS_TEMATICAS, type Publication } from "@/lib/types";
 
 interface ExplorePageProps {
   initialSearch?: string;
@@ -34,7 +46,13 @@ export function ExplorePage({ initialSearch = "" }: ExplorePageProps) {
     );
   }
 
-  return <ExploreContent key={initialSearch} initialSearch={initialSearch} publications={publications} />;
+  return (
+    <ExploreContent
+      key={initialSearch}
+      initialSearch={initialSearch}
+      publications={publications}
+    />
+  );
 }
 
 function ExploreContent({
@@ -49,6 +67,15 @@ function ExploreContent({
   const [programaFilter, setProgramaFilter] = useState<string>("");
   const [lineaFilter, setLineaFilter] = useState<string>("");
   const [anioFilter, setAnioFilter] = useState<string>("");
+  const {
+    clearError,
+    error,
+    isListening,
+    isRecognitionSupported,
+    startListening,
+    stopListening,
+  } = useSpeech();
+
   const programOptions =
     programas.length > 0
       ? programas
@@ -60,7 +87,7 @@ function ExploreContent({
       pub.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pub.autor.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pub.palabrasClave.some((kw) =>
-        kw.toLowerCase().includes(searchQuery.toLowerCase())
+        kw.toLowerCase().includes(searchQuery.toLowerCase()),
       );
 
     const matchesPrograma = !programaFilter || pub.programa === programaFilter;
@@ -81,12 +108,37 @@ function ExploreContent({
     setProgramaFilter("");
     setLineaFilter("");
     setAnioFilter("");
+    clearError();
+  };
+
+  const handleVoiceSearch = () => {
+    clearError();
+
+    if (isListening) {
+      stopListening();
+      return;
+    }
+
+    startListening({
+      onResult: (nextTranscript) => {
+        setSearchQuery(nextTranscript);
+      },
+      onEnd: (finalTranscript) => {
+        const normalizedTranscript = finalTranscript.trim();
+
+        if (!normalizedTranscript) {
+          return;
+        }
+
+        setSearchQuery(normalizedTranscript);
+      },
+    });
   };
 
   const hasFilters = searchQuery || programaFilter || lineaFilter || anioFilter;
 
   const years = Array.from(new Set(publications.map((p) => p.año))).sort(
-    (a, b) => b - a
+    (a, b) => b - a,
   );
 
   return (
@@ -102,15 +154,50 @@ function ExploreContent({
         </div>
 
         <div className="mb-8 space-y-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por título, autor o palabra clave..."
-              className="h-12 pl-12 pr-4"
-            />
+          <div>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por titulo, autor o palabra clave..."
+                className="h-12 pl-12 pr-14"
+              />
+              <Button
+                type="button"
+                size="icon-sm"
+                variant={isListening ? "default" : "ghost"}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                onClick={handleVoiceSearch}
+                disabled={!isRecognitionSupported}
+                aria-label={
+                  isListening
+                    ? "Detener busqueda por voz"
+                    : "Iniciar busqueda por voz"
+                }
+                title={
+                  isRecognitionSupported
+                    ? "Buscar con voz"
+                    : "La busqueda por voz no esta disponible en este navegador"
+                }
+              >
+                {isRecognitionSupported ? (
+                  <Mic className={isListening ? "animate-pulse" : undefined} />
+                ) : (
+                  <MicOff />
+                )}
+              </Button>
+            </div>
+            <div className="mt-2 min-h-5 text-sm text-muted-foreground">
+              {isListening
+                ? "Escuchando... tu busqueda se transcribira automaticamente."
+                : error
+                  ? error
+                  : !isRecognitionSupported
+                    ? "La busqueda por voz funciona mejor en Chrome o Edge."
+                    : "Usa el microfono para completar la busqueda sin escribir."}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -121,7 +208,7 @@ function ExploreContent({
 
             <Select value={programaFilter} onValueChange={setProgramaFilter}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Programa académico" />
+                <SelectValue placeholder="Programa academico" />
               </SelectTrigger>
               <SelectContent>
                 {programOptions.map((prog) => (
@@ -134,7 +221,7 @@ function ExploreContent({
 
             <Select value={lineaFilter} onValueChange={setLineaFilter}>
               <SelectTrigger className="w-44">
-                <SelectValue placeholder="Línea temática" />
+                <SelectValue placeholder="Linea tematica" />
               </SelectTrigger>
               <SelectContent>
                 {LINEAS_TEMATICAS.map((linea) => (
@@ -223,7 +310,7 @@ function ExploreContent({
               No se encontraron recursos digitales
             </h3>
             <p className="mt-2 text-base text-muted-foreground">
-              Intenta con otros términos de búsqueda o filtros
+              Intenta con otros terminos de busqueda o filtros
             </p>
           </div>
         ) : (
@@ -235,10 +322,7 @@ function ExploreContent({
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <Badge
-                      variant="secondary"
-                      className="bg-primary/10 text-primary"
-                    >
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
                       {publication.programa}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
@@ -261,11 +345,7 @@ function ExploreContent({
 
                   <div className="mb-4 flex flex-wrap gap-1">
                     {publication.palabrasClave.slice(0, 3).map((keyword) => (
-                      <Badge
-                        key={keyword}
-                        variant="outline"
-                        className="text-xs"
-                      >
+                      <Badge key={keyword} variant="outline" className="text-xs">
                         <Tag className="mr-1 h-3 w-3" />
                         {keyword}
                       </Badge>
@@ -275,14 +355,13 @@ function ExploreContent({
                   <div className="flex items-center justify-between gap-2 border-t border-border pt-4">
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {new Date(publication.fechaPublicacion ?? publication.created_at).toLocaleDateString(
-                        "es-CO",
-                        {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
+                      {new Date(
+                        publication.fechaPublicacion ?? publication.created_at,
+                      ).toLocaleDateString("es-CO", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                     <Button
                       asChild

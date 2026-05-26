@@ -1,8 +1,20 @@
 "use client";
 
-import { Calendar, User, Tag, BookOpen, FileText } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useMemo } from "react";
+import {
+  BookOpen,
+  Calendar,
+  FileText,
+  Square,
+  Tag,
+  User,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useSpeech } from "@/hooks/use-speech";
 import type { Publication } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface PublicationDetailContentProps {
   publication: Publication;
@@ -11,6 +23,36 @@ interface PublicationDetailContentProps {
 export function PublicationDetailContent({
   publication,
 }: PublicationDetailContentProps) {
+  const {
+    cancelSpeaking,
+    error,
+    isSpeaking,
+    isSynthesisSupported,
+    speak,
+  } = useSpeech();
+
+  const spokenSummary = useMemo(() => {
+    const content = [
+      publication.titulo ? `Titulo: ${publication.titulo}.` : "",
+      publication.autor ? `Autor: ${publication.autor}.` : "",
+      publication.resumen ? `Resumen: ${publication.resumen}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    return content;
+  }, [publication.autor, publication.resumen, publication.titulo]);
+
+  const handleSummaryAudio = () => {
+    if (isSpeaking) {
+      cancelSpeaking();
+      return;
+    }
+
+    speak(spokenSummary);
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -26,7 +68,7 @@ export function PublicationDetailContent({
         </div>
         <div className="flex items-center gap-2 text-sm">
           <BookOpen className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Línea:</span>
+          <span className="text-muted-foreground">Linea:</span>
           <span className="font-medium text-foreground">
             {publication.lineaTematica}
           </span>
@@ -46,9 +88,57 @@ export function PublicationDetailContent({
       </div>
 
       <div>
-        <h4 className="mb-2 font-semibold text-foreground">Resumen</h4>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h4 className="font-semibold text-foreground">Resumen</h4>
+          <Button
+            type="button"
+            variant={isSpeaking ? "default" : "outline"}
+            size="sm"
+            className="gap-2"
+            onClick={handleSummaryAudio}
+            disabled={!isSynthesisSupported}
+            aria-label={
+              isSpeaking
+                ? "Detener lectura del resumen"
+                : "Leer titulo, autor y resumen"
+            }
+            title={
+              isSynthesisSupported
+                ? "Escuchar resumen"
+                : "La lectura por voz no esta disponible en este navegador"
+            }
+          >
+            {isSynthesisSupported ? (
+              isSpeaking ? (
+                <>
+                  <Square className="h-4 w-4" />
+                  Detener lectura
+                </>
+              ) : (
+                <>
+                  <Volume2 className="h-4 w-4" />
+                  Escuchar resumen
+                </>
+              )
+            ) : (
+              <>
+                <VolumeX className="h-4 w-4" />
+                Voz no disponible
+              </>
+            )}
+          </Button>
+        </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
           {publication.resumen}
+        </p>
+        <p className="mt-2 min-h-5 text-xs text-muted-foreground">
+          {isSpeaking
+            ? "Leyendo titulo, autor y resumen."
+            : error
+              ? error
+              : !isSynthesisSupported
+                ? "La lectura por voz funciona mejor en Chrome o Edge."
+                : "Pulsa el boton para escuchar esta publicacion."}
         </p>
       </div>
 
