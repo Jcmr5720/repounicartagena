@@ -47,9 +47,38 @@ Las funcionalidades de carga y descarga estan implementadas en
 `components/publication-detail-modal.tsx`.
 
 La evaluacion ya existe como modulo funcional, no solo como idea. El proyecto
-implementa acciones de `Evaluar`, `Aprobar`, `Rechazar` y `Devolver con observaciones`
-en `components/publication-management-page.tsx`, con persistencia en
-`cartagena_publication_evaluations` y `cartagena_publication_workflow_events`.
+implementa una evaluacion academica formal con rubrica fija de 4 criterios,
+puntajes de 1 a 5, total automatico sobre 20, concepto final, fortalezas,
+mejoras y observaciones generales.
+
+La evidencia principal esta en:
+
+- `components/evaluation-form.tsx`: formulario de evaluacion con rubrica, total,
+  concepto final y botones validados de decision.
+- `components/publication-management-page.tsx`: integra la evaluacion formal con
+  el flujo de trabajo del evaluador.
+- `lib/publications-context.tsx`: guarda y consulta evaluaciones persistidas en
+  Supabase.
+- `supabase/migrations/20260527000300_cartagena_evaluation_rubric.sql`: amplia
+  `cartagena_publication_evaluations`, crea funciones de guardado y validacion,
+  y ajusta policies.
+
+La tabla `cartagena_publication_evaluations` persiste:
+
+- `publication_id`
+- `evaluator_id`
+- `criteria_scores`
+- `total_score`
+- `decision`
+- `strengths`
+- `improvements`
+- `comments`
+- `evaluated_at`
+
+Ademas, el sistema impide decisiones sin evidencia: antes de `Aprobar`,
+`Rechazar` o `Devolver con observaciones`, la funcion
+`cartagena_apply_publication_workflow_action(...)` valida que exista una
+evaluacion completa asociada a la publicacion.
 
 Los flujos de trabajo tambien quedaron articulados. El estudiante envia, el
 docente revisa, el evaluador decide y el admin publica o suspende. Esa logica se

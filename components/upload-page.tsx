@@ -41,6 +41,7 @@ import {
 import { usePublications } from "@/lib/publications-context";
 import {
   DOCUMENT_STATUS_LABELS,
+  EVALUATION_DECISION_LABELS,
   LINEAS_TEMATICAS,
   PROGRAMAS_ACADEMICOS,
   PUBLICATION_WORKFLOW_STATUS_LABELS,
@@ -76,6 +77,7 @@ export function UploadPage() {
     applyWorkflowAction,
     updatePublication,
     deletePublication,
+    getLatestEvaluationForPublication,
     getLatestWorkflowCommentForPublication,
     getWorkflowEventsForPublication,
     isLoading: publicationsLoading,
@@ -652,6 +654,7 @@ export function UploadPage() {
             <div className="space-y-4">
               {manageablePublications.map((publication) => {
                 const latestComment = getLatestWorkflowCommentForPublication(publication.id);
+                const latestEvaluation = getLatestEvaluationForPublication(publication.id);
                 const workflowEvents = getWorkflowEventsForPublication(publication.id).slice(0, 3);
 
                 return (
@@ -691,6 +694,37 @@ export function UploadPage() {
                           </span>{" "}
                           {latestComment?.comments || "Todavia no hay observaciones."}
                         </p>
+                        {latestEvaluation &&
+                        ["ajustes_solicitados", "rechazada"].includes(
+                          publication.workflow_status,
+                        ) ? (
+                          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                            <p className="font-medium">
+                              Retroalimentacion de evaluacion
+                            </p>
+                            <p className="mt-1">
+                              Puntaje total: {latestEvaluation.total_score ?? "Sin total"}/20
+                            </p>
+                            <p>
+                              Concepto final:{" "}
+                              {latestEvaluation.decision
+                                ? EVALUATION_DECISION_LABELS[latestEvaluation.decision]
+                                : "Sin concepto final"}
+                            </p>
+                            <p>
+                              Fortalezas:{" "}
+                              {latestEvaluation.strengths || "Sin fortalezas registradas."}
+                            </p>
+                            <p>
+                              Mejoras:{" "}
+                              {latestEvaluation.improvements || "Sin mejoras registradas."}
+                            </p>
+                            <p>
+                              Observaciones:{" "}
+                              {latestEvaluation.comments || "Sin observaciones generales."}
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-wrap gap-2">

@@ -16,7 +16,9 @@ import { supabaseConfig } from "@/lib/supabase/client";
 import { useSupabase } from "@/lib/supabase/provider";
 import type {
   AcademicProgram,
+  EvaluationCriteriaScores,
   Publication,
+  PublicationEvaluationInput,
   PublicationEvaluation,
   PublicationReview,
   PublicationWorkflowAction,
@@ -58,6 +60,9 @@ interface PublicationsContextType {
     action: PublicationWorkflowAction,
     comments?: string,
   ) => Promise<{ success: boolean; error?: string }>;
+  savePublicationEvaluation: (
+    input: PublicationEvaluationInput,
+  ) => Promise<{ success: boolean; error?: string }>;
   getPublicationById: (id: string) => Publication | undefined;
   getWorkflowEventsForPublication: (
     publicationId: string,
@@ -65,6 +70,9 @@ interface PublicationsContextType {
   getLatestWorkflowCommentForPublication: (
     publicationId: string,
   ) => PublicationWorkflowEvent | undefined;
+  getLatestEvaluationForPublication: (
+    publicationId: string,
+  ) => PublicationEvaluation | undefined;
   searchPublications: (query: string) => Publication[];
   refreshPublications: () => Promise<void>;
 }
@@ -146,7 +154,13 @@ type SupabaseEvaluationRow = {
   role: PublicationEvaluation["role"];
   action: string;
   workflow_status: PublicationWorkflowStatus;
+  criteria_scores: EvaluationCriteriaScores | null;
+  total_score: number | null;
+  decision: PublicationEvaluation["decision"];
+  strengths: string | null;
+  improvements: string | null;
   comments: string | null;
+  evaluated_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -201,6 +215,35 @@ function normalizeProgramName(programa: string) {
 
 function normalizeQuery(query: string) {
   return query.trim().toLowerCase();
+}
+
+function isCompleteEvaluation(evaluation: PublicationEvaluation) {
+  return (
+    !!evaluation.evaluated_at &&
+    evaluation.total_score !== null &&
+    evaluation.decision !== null &&
+    Object.keys(evaluation.criteria_scores ?? {}).length === 4
+  );
+}
+
+function mapRowToEvaluation(row: SupabaseEvaluationRow): PublicationEvaluation {
+  return {
+    id: row.id,
+    publication_id: row.publication_id,
+    evaluator_id: row.evaluator_id,
+    role: row.role,
+    action: row.action,
+    workflow_status: row.workflow_status,
+    criteria_scores: row.criteria_scores ?? {},
+    total_score: row.total_score,
+    decision: row.decision,
+    strengths: row.strengths,
+    improvements: row.improvements,
+    comments: row.comments,
+    evaluated_at: row.evaluated_at,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  };
 }
 
 async function readResponseMessage(response: Response) {
@@ -323,9 +366,10 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
           supabase
             .from(EVALUATIONS_TABLE)
             .select(
-              "id,publication_id,evaluator_id,role,action,workflow_status,comments,created_at,updated_at",
+              "id,publication_id,evaluator_id,role,action,workflow_status,criteria_scores,total_score,decision,strengths,improvements,comments,evaluated_at,created_at,updated_at",
             )
             .in("publication_id", publicationIds)
+            .order("evaluated_at", { ascending: false, nullsFirst: false })
             .order("created_at", { ascending: false }),
         ]);
 
@@ -347,7 +391,9 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         console.error("Error loading evaluations", evaluationError);
         setEvaluations([]);
       } else {
-        setEvaluations((evaluationData ?? []) as SupabaseEvaluationRow[]);
+        setEvaluations(
+          ((evaluationData ?? []) as SupabaseEvaluationRow[]).map(mapRowToEvaluation),
+        );
       }
     },
     [supabase, user],
@@ -367,8 +413,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     await loadPrograms();
 
-    const shouldFetchAccessible =
-      !!user || canViewAllDocuments(user) || user?.role === "estudiante";
+    const shouldFetchAccessible = !!user || canViewAllDocuments(user);
     const baseQuery = supabase
       .from(PUBLICATIONS_TABLE)
       .select(
@@ -686,6 +731,34 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     [loadPublications, supabase],
   );
 
+  const savePublicationEvaluation = useCallback(
+    async (input: PublicationEvaluationInput) => {
+      if (!supabase) {
+        return { success: false, error: "Supabase no esta disponible" };
+      }
+
+      const { error } = await supabase.rpc(
+        "cartagena_upsert_publication_evaluation",
+        {
+          p_publication_id: input.publication_id,
+          p_criteria_scores: input.criteria_scores,
+          p_decision: input.decision ?? null,
+          p_strengths: input.strengths?.trim() || null,
+          p_improvements: input.improvements?.trim() || null,
+          p_comments: input.comments?.trim() || null,
+        },
+      );
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      await loadPublications();
+      return { success: true };
+    },
+    [loadPublications, supabase],
+  );
+
   const getPublicationById = useCallback(
     (id: string) =>
       publications.find((publication) => publication.id === id),
@@ -704,6 +777,16 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         (event) => event.publication_id === publicationId && event.comments,
       ),
     [workflowEvents],
+  );
+
+  const getLatestEvaluationForPublication = useCallback(
+    (publicationId: string) =>
+      evaluations.find(
+        (evaluation) =>
+          evaluation.publication_id === publicationId && isCompleteEvaluation(evaluation),
+      ) ??
+      evaluations.find((evaluation) => evaluation.publication_id === publicationId),
+    [evaluations],
   );
 
   const searchPublications = useCallback(
@@ -741,9 +824,11 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       updatePublication,
       deletePublication,
       applyWorkflowAction,
+      savePublicationEvaluation,
       getPublicationById,
       getWorkflowEventsForPublication,
       getLatestWorkflowCommentForPublication,
+      getLatestEvaluationForPublication,
       searchPublications,
       refreshPublications,
     }),
@@ -752,6 +837,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       applyWorkflowAction,
       deletePublication,
       evaluations,
+      getLatestEvaluationForPublication,
       getLatestWorkflowCommentForPublication,
       getPublicationById,
       getWorkflowEventsForPublication,
@@ -760,6 +846,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       publications,
       refreshPublications,
       reviews,
+      savePublicationEvaluation,
       searchPublications,
       updatePublication,
       workflowEvents,

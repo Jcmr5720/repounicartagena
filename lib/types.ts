@@ -31,6 +31,30 @@ export type PublicationWorkflowAction =
   | "publish"
   | "suspend";
 
+export type EvaluationDecision =
+  | "approve"
+  | "reject"
+  | "return_with_observations";
+
+export type EvaluationCriteriaKey =
+  | "calidad_academica"
+  | "pertinencia_tematica"
+  | "claridad_redaccion"
+  | "uso_metadatos_documentacion";
+
+export type EvaluationCriteriaScores = Partial<
+  Record<EvaluationCriteriaKey, number>
+>;
+
+export interface PublicationEvaluationInput {
+  publication_id: string;
+  criteria_scores: EvaluationCriteriaScores;
+  decision?: EvaluationDecision | null;
+  strengths?: string;
+  improvements?: string;
+  comments?: string;
+}
+
 export interface AcademicProgram {
   id: string;
   nombre: string;
@@ -110,10 +134,49 @@ export interface PublicationEvaluation {
   role: UserRole;
   action: string;
   workflow_status: PublicationWorkflowStatus;
+  criteria_scores: EvaluationCriteriaScores;
+  total_score: number | null;
+  decision: EvaluationDecision | null;
+  strengths: string | null;
+  improvements: string | null;
   comments: string | null;
+  evaluated_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+export const EVALUATION_CRITERIA: Array<{
+  key: EvaluationCriteriaKey;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: "calidad_academica",
+    label: "Calidad academica",
+    description: "Solidez conceptual, rigor y aporte del contenido.",
+  },
+  {
+    key: "pertinencia_tematica",
+    label: "Pertinencia tematica",
+    description: "Relacion con el programa, la linea y el contexto del recurso.",
+  },
+  {
+    key: "claridad_redaccion",
+    label: "Claridad y redaccion",
+    description: "Organizacion del texto, comprension y coherencia expositiva.",
+  },
+  {
+    key: "uso_metadatos_documentacion",
+    label: "Uso de metadatos y documentacion",
+    description: "Completitud del registro, apoyo documental y calidad de presentacion.",
+  },
+];
+
+export const EVALUATION_DECISION_LABELS: Record<EvaluationDecision, string> = {
+  approve: "Aprobar",
+  reject: "Rechazar",
+  return_with_observations: "Devolver con observaciones",
+};
 
 export const PROGRAMAS_ACADEMICOS = [
   "Ingeniería de Sistemas",
