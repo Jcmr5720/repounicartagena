@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -12,7 +12,6 @@ import {
   Mail,
   User,
   UserPlus,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -195,28 +194,10 @@ export function AuthPage() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
-            <FeaturePill
-              icon={<Zap className="h-4 w-4 text-amber-400" />}
-              title="Registro rapido"
-              description="Solo unos datos para empezar."
-            />
-            <FeaturePill
-              icon={<User className="h-4 w-4 text-amber-400" />}
-              title="Entra con Google"
-              description="Un clic y listo."
-            />
-            <FeaturePill
-              icon={<Lock className="h-4 w-4 text-amber-400" />}
-              title="Perfil seguro"
-              description="Tu informacion, protegida."
-            />
-          </div>
-
           {/* Línea decorativa */}
           <div className="hidden items-center gap-4 lg:flex">
             <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-            <span className="text-xs text-stone-600">REDS Colombia · 2025</span>
+            <span className="text-xs text-stone-600">REDS Colombia · 2026</span>
           </div>
         </section>
 
@@ -532,22 +513,3 @@ export function AuthPage() {
   );
 }
 
-function FeaturePill({
-  icon,
-  title,
-  description,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-white/8 bg-white/[0.04] p-4 backdrop-blur-sm">
-      <div className="mb-2 flex items-center gap-2">
-        {icon}
-        <p className="text-sm font-semibold text-white">{title}</p>
-      </div>
-      <p className="text-xs leading-5 text-stone-400">{description}</p>
-    </div>
-  );
-}

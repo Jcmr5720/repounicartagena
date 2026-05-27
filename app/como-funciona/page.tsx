@@ -9,7 +9,6 @@ import {
   GraduationCap,
   Shield,
   Sparkles,
-  Upload,
   UserRound,
   Workflow,
 } from "lucide-react";
@@ -447,25 +446,6 @@ export default function Page() {
                   </a>
                 ))}
               </nav>
-
-              <div className="mt-6 rounded-2xl border border-border/70 bg-muted/40 p-4 text-sm leading-7 text-muted-foreground">
-                <p className="font-semibold text-foreground">Idea central</p>
-                <p className="mt-2">
-                  Consulta para explorar, inicia sesion para actuar y deja que cada
-                  rol opere dentro de su parte del workflow.
-                </p>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-border/70 bg-primary/5 p-4 text-sm leading-7 text-muted-foreground">
-                <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <Upload className="h-4 w-4 text-primary" />
-                  Evidencia visible
-                </div>
-                <p className="mt-2">
-                  El estudiante ve su estado y observaciones. Docente, evaluador y
-                  admin ven acciones distintas segun sus permisos.
-                </p>
-              </div>
             </div>
           </aside>
         </div>
