@@ -1,6 +1,35 @@
-export type UserRole = "estudiante" | "moderador" | "admin";
+export type UserRole =
+  | "estudiante"
+  | "docente"
+  | "evaluador"
+  | "moderador"
+  | "admin";
 
 export type DocumentStatus = "disponible" | "suspendido";
+
+export type PublicationWorkflowStatus =
+  | "borrador"
+  | "enviada"
+  | "en_revision_docente"
+  | "ajustes_solicitados"
+  | "enviada_a_evaluacion"
+  | "en_evaluacion"
+  | "aprobada"
+  | "rechazada"
+  | "publicada"
+  | "suspendida";
+
+export type PublicationWorkflowAction =
+  | "submit_for_review"
+  | "start_docente_review"
+  | "request_adjustments"
+  | "send_to_evaluation"
+  | "start_evaluation"
+  | "approve"
+  | "reject"
+  | "return_with_observations"
+  | "publish"
+  | "suspend";
 
 export interface AcademicProgram {
   id: string;
@@ -37,6 +66,8 @@ export interface Document {
   palabrasClave: string[];
   status: DocumentStatus;
   estado: DocumentStatus;
+  workflow_status: PublicationWorkflowStatus;
+  workflowStatus: PublicationWorkflowStatus;
   storage_path: string;
   file_name?: string | null;
   file_size?: number | null;
@@ -47,6 +78,42 @@ export interface Document {
 }
 
 export type Publication = Document;
+
+export interface PublicationWorkflowEvent {
+  id: string;
+  publication_id: string;
+  user_id: string;
+  role: UserRole;
+  action: PublicationWorkflowAction | string;
+  previous_status: PublicationWorkflowStatus | null;
+  next_status: PublicationWorkflowStatus;
+  comments: string | null;
+  created_at: string;
+}
+
+export interface PublicationReview {
+  id: string;
+  publication_id: string;
+  reviewer_id: string;
+  role: UserRole;
+  action: string;
+  workflow_status: PublicationWorkflowStatus;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PublicationEvaluation {
+  id: string;
+  publication_id: string;
+  evaluator_id: string;
+  role: UserRole;
+  action: string;
+  workflow_status: PublicationWorkflowStatus;
+  comments: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 export const PROGRAMAS_ACADEMICOS = [
   "Ingeniería de Sistemas",
@@ -84,11 +151,45 @@ export const LINEAS_TEMATICAS = [
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   estudiante: "Estudiante",
-  moderador: "Moderador",
+  docente: "Docente",
+  evaluador: "Evaluador",
+  moderador: "Evaluador",
   admin: "Administrador",
 };
 
 export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   disponible: "Disponible",
   suspendido: "Suspendido",
+};
+
+export const PUBLICATION_WORKFLOW_STATUS_LABELS: Record<
+  PublicationWorkflowStatus,
+  string
+> = {
+  borrador: "Borrador",
+  enviada: "Enviada",
+  en_revision_docente: "En revision docente",
+  ajustes_solicitados: "Ajustes solicitados",
+  enviada_a_evaluacion: "Enviada a evaluacion",
+  en_evaluacion: "En evaluacion",
+  aprobada: "Aprobada",
+  rechazada: "Rechazada",
+  publicada: "Publicada",
+  suspendida: "Suspendida",
+};
+
+export const PUBLICATION_WORKFLOW_ACTION_LABELS: Record<
+  PublicationWorkflowAction,
+  string
+> = {
+  submit_for_review: "Enviar a revision",
+  start_docente_review: "Revisar",
+  request_adjustments: "Solicitar ajustes",
+  send_to_evaluation: "Enviar a evaluacion",
+  start_evaluation: "Evaluar",
+  approve: "Aprobar",
+  reject: "Rechazar",
+  return_with_observations: "Devolver con observaciones",
+  publish: "Publicar",
+  suspend: "Suspender",
 };

@@ -1,21 +1,22 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import {
-  Upload,
-  FileText,
-  X,
-  CheckCircle,
   AlertCircle,
-  User,
+  CheckCircle,
   Edit3,
-  Trash2,
+  FileText,
   PlusCircle,
   ShieldAlert,
+  Trash2,
+  Upload,
+  User,
+  X,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PublicationWorkflowTimeline } from "@/components/publication-workflow-timeline";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,18 +32,20 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth-context";
-import { usePublications } from "@/lib/publications-context";
-import {
-  PROGRAMAS_ACADEMICOS,
-  LINEAS_TEMATICAS,
-  type Publication,
-  DOCUMENT_STATUS_LABELS,
-} from "@/lib/types";
 import {
   canDeleteDocument,
   canEditDocument,
   canManageDocuments,
+  canSubmitForReview,
 } from "@/lib/permissions";
+import { usePublications } from "@/lib/publications-context";
+import {
+  DOCUMENT_STATUS_LABELS,
+  LINEAS_TEMATICAS,
+  PROGRAMAS_ACADEMICOS,
+  PUBLICATION_WORKFLOW_STATUS_LABELS,
+  type Publication,
+} from "@/lib/types";
 
 type FormState = {
   titulo: string;
@@ -70,8 +73,11 @@ export function UploadPage() {
     publications,
     programas,
     addPublication,
+    applyWorkflowAction,
     updatePublication,
     deletePublication,
+    getLatestWorkflowCommentForPublication,
+    getWorkflowEventsForPublication,
     isLoading: publicationsLoading,
     refreshPublications,
   } = usePublications();
@@ -85,25 +91,28 @@ export function UploadPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [editingPublication, setEditingPublication] = useState<Publication | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMode, setSubmitMode] = useState<"draft" | "review">("draft");
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
   const [message, setMessage] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (editingPublication) {
-      setFormData({
-        titulo: editingPublication.titulo,
-        autor: editingPublication.autor,
-        programa: editingPublication.programa_id,
-        año: editingPublication.año.toString(),
-        lineaTematica: editingPublication.lineaTematica,
-        resumen: editingPublication.resumen,
-        palabrasClave: editingPublication.palabrasClave.join(", "),
-      });
-      setSelectedFile(null);
-      setSubmitStatus(null);
-      setMessage("");
+    if (!editingPublication) {
+      return;
     }
+
+    setFormData({
+      titulo: editingPublication.titulo,
+      autor: editingPublication.autor,
+      programa: editingPublication.programa_id,
+      año: editingPublication.año.toString(),
+      lineaTematica: editingPublication.lineaTematica,
+      resumen: editingPublication.resumen,
+      palabrasClave: editingPublication.palabrasClave.join(", "),
+    });
+    setSelectedFile(null);
+    setSubmitStatus(null);
+    setMessage("");
   }, [editingPublication]);
 
   const manageablePublications = useMemo(() => {
@@ -138,10 +147,10 @@ export function UploadPage() {
               Acceso requerido
             </h2>
             <p className="mb-6 text-muted-foreground">
-              Debes iniciar sesión para subir y administrar documentos.
+              Debes iniciar sesion para subir y administrar documentos.
             </p>
             <Button asChild>
-              <Link href="/auth">Iniciar sesión</Link>
+              <Link href="/auth">Iniciar sesion</Link>
             </Button>
           </CardContent>
         </Card>
@@ -161,8 +170,7 @@ export function UploadPage() {
               No tienes permisos para subir documentos
             </h2>
             <p className="text-muted-foreground">
-              Tu rol actual solo puede ver y moderar documentos. Si necesitas
-              cargar contenido, pide que te asignen el rol adecuado.
+              Este espacio esta reservado para estudiantes y administradores.
             </p>
           </CardContent>
         </Card>
@@ -174,24 +182,28 @@ export function UploadPage() {
     setEditingPublication(null);
     setFormData(INITIAL_FORM);
     setSelectedFile(null);
+    setSubmitMode("draft");
     setSubmitStatus(null);
     setMessage("");
   };
 
-  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.type === "application/pdf") {
-        setSelectedFile(file);
-      } else {
-        setMessage("Solo se permiten archivos PDF");
-        setSubmitStatus("error");
-      }
+  const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
     }
+
+    if (file.type !== "application/pdf") {
+      setMessage("Solo se permiten archivos PDF");
+      setSubmitStatus("error");
+      return;
+    }
+
+    setSelectedFile(file);
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
     setMessage("");
@@ -221,6 +233,7 @@ export function UploadPage() {
             anio: payload.año,
             lineaTematica: payload.lineaTematica,
             palabrasClave: payload.palabrasClave,
+            workflow_status: editingPublication.workflow_status,
             file: selectedFile,
           });
 
@@ -228,7 +241,7 @@ export function UploadPage() {
             throw new Error(uploadResult.error || "No se pudo reemplazar el archivo");
           }
         } else {
-          const updates: Partial<Publication> = {
+          const updateResult = await updatePublication(editingPublication.id, {
             title: payload.titulo,
             titulo: payload.titulo,
             autor: payload.autor,
@@ -238,16 +251,32 @@ export function UploadPage() {
             description: payload.resumen,
             resumen: payload.resumen,
             palabrasClave: payload.palabrasClave,
-          };
+          });
 
-          const updateResult = await updatePublication(editingPublication.id, updates);
           if (!updateResult.success) {
             throw new Error(updateResult.error || "No se pudo actualizar el documento");
           }
         }
 
+        if (submitMode === "review" && canSubmitForReview(user, editingPublication)) {
+          const transitionResult = await applyWorkflowAction(
+            editingPublication.id,
+            "submit_for_review",
+          );
+
+          if (!transitionResult.success) {
+            throw new Error(
+              transitionResult.error || "No se pudo enviar la publicacion a revision",
+            );
+          }
+        }
+
         setSubmitStatus("success");
-        setMessage("Documento actualizado correctamente.");
+        setMessage(
+          submitMode === "review"
+            ? "Documento actualizado y enviado a revision."
+            : "Documento actualizado correctamente.",
+        );
       } else {
         if (!selectedFile) {
           throw new Error("Debes seleccionar un archivo PDF");
@@ -261,22 +290,42 @@ export function UploadPage() {
           año: payload.año,
           lineaTematica: payload.lineaTematica,
           palabrasClave: payload.palabrasClave,
+          workflow_status: "borrador",
           file: selectedFile,
         });
 
         if (!result.success) {
-          throw new Error(result.error || "No se pudo publicar el documento");
+          throw new Error(result.error || "No se pudo guardar el documento");
+        }
+
+        if (submitMode === "review" && result.documentId) {
+          const transitionResult = await applyWorkflowAction(
+            result.documentId,
+            "submit_for_review",
+          );
+
+          if (!transitionResult.success) {
+            throw new Error(
+              transitionResult.error || "No se pudo enviar la publicacion a revision",
+            );
+          }
         }
 
         setSubmitStatus("success");
-        setMessage("Documento publicado correctamente.");
+        setMessage(
+          submitMode === "review"
+            ? "Documento creado y enviado a revision."
+            : "Documento guardado como borrador.",
+        );
       }
 
       resetForm();
       await refreshPublications();
     } catch (error) {
       setSubmitStatus("error");
-      setMessage(error instanceof Error ? error.message : "No se pudo guardar el documento");
+      setMessage(
+        error instanceof Error ? error.message : "No se pudo completar la operacion",
+      );
     }
 
     setIsSubmitting(false);
@@ -292,12 +341,11 @@ export function UploadPage() {
       return;
     }
 
-    const targetId = deleteId;
     setIsSubmitting(true);
     setMessage("");
     setSubmitStatus(null);
 
-    const result = await deletePublication(targetId);
+    const result = await deletePublication(deleteId);
     if (!result.success) {
       setSubmitStatus("error");
       setMessage(result.error || "No se pudo eliminar el documento");
@@ -308,10 +356,25 @@ export function UploadPage() {
     setSubmitStatus("success");
     setMessage("Documento eliminado correctamente.");
     setDeleteId(null);
-    if (editingPublication?.id === targetId) {
+    if (editingPublication?.id === deleteId) {
       resetForm();
     }
     setIsSubmitting(false);
+  };
+
+  const handleSendToReview = async (publication: Publication) => {
+    setMessage("");
+    setSubmitStatus(null);
+
+    const result = await applyWorkflowAction(publication.id, "submit_for_review");
+    if (!result.success) {
+      setSubmitStatus("error");
+      setMessage(result.error || "No se pudo enviar la publicacion a revision");
+      return;
+    }
+
+    setSubmitStatus("success");
+    setMessage("La publicacion fue enviada a revision docente.");
   };
 
   return (
@@ -319,53 +382,53 @@ export function UploadPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            {editingPublication ? "Editar documento" : "Subir documento"}
+            {editingPublication ? "Editar publicacion" : "Subir documento"}
           </h1>
           <p className="mt-2 text-muted-foreground">
             {editingPublication
-              ? "Actualiza la informaci\u00f3n del documento y, si lo necesitas, reemplaza el PDF."
-              : "Completa el formulario para publicar un recurso digital."}
+              ? "Actualiza el recurso y decide si quieres mantenerlo en trabajo o enviarlo a revision."
+              : "Guarda tu trabajo como borrador o envialo directamente a revision docente."}
           </p>
         </div>
         {editingPublication ? (
           <Button variant="outline" onClick={resetForm}>
-            Cancelar edición
+            Cancelar edicion
           </Button>
         ) : null}
       </div>
 
-      {submitStatus === "success" && (
+      {submitStatus === "success" ? (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-green-50 p-4 text-green-800">
           <CheckCircle className="h-5 w-5" />
-          <span>{message || "Operación completada correctamente."}</span>
+          <span>{message || "Operacion completada correctamente."}</span>
         </div>
-      )}
+      ) : null}
 
-      {submitStatus === "error" && (
+      {submitStatus === "error" ? (
         <div className="mb-6 flex items-center gap-2 rounded-lg bg-destructive/10 p-4 text-destructive">
           <AlertCircle className="h-5 w-5" />
-          <span>{message || "No se pudo completar la operación."}</span>
+          <span>{message || "No se pudo completar la operacion."}</span>
         </div>
-      )}
+      ) : null}
 
       <Card className="border-border">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
-            Información del recurso digital
+            Informacion del recurso digital
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="titulo">Título del recurso digital *</Label>
+              <Label htmlFor="titulo">Titulo del recurso digital *</Label>
               <Input
                 id="titulo"
                 value={formData.titulo}
-                onChange={(e) =>
-                  setFormData({ ...formData, titulo: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, titulo: event.target.value })
                 }
-                placeholder="Ingresa el título del recurso digital"
+                placeholder="Ingresa el titulo del recurso digital"
                 required
               />
             </div>
@@ -375,8 +438,8 @@ export function UploadPage() {
               <Input
                 id="autor"
                 value={formData.autor}
-                onChange={(e) =>
-                  setFormData({ ...formData, autor: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, autor: event.target.value })
                 }
                 placeholder="Nombre del autor o autores"
                 required
@@ -384,38 +447,38 @@ export function UploadPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="programa">Programa académico *</Label>
+              <Label htmlFor="programa">Programa academico *</Label>
               <select
                 id="programa"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.programa}
-                onChange={(e) =>
-                  setFormData({ ...formData, programa: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, programa: event.target.value })
                 }
                 required
               >
                 <option value="">Selecciona programa</option>
-                {programOptions.map((prog) => (
-                  <option key={prog.id} value={prog.id}>
-                    {prog.nombre}
+                {programOptions.map((programa) => (
+                  <option key={programa.id} value={programa.id}>
+                    {programa.nombre}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="año">Año *</Label>
+              <Label htmlFor="anio">Año *</Label>
               <select
-                id="año"
+                id="anio"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.año}
-                onChange={(e) =>
-                  setFormData({ ...formData, año: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, año: event.target.value })
                 }
                 required
               >
-                {Array.from({ length: 10 }, (_, i) => {
-                  const year = new Date().getFullYear() - i;
+                {Array.from({ length: 10 }, (_, index) => {
+                  const year = new Date().getFullYear() - index;
                   return (
                     <option key={year} value={year.toString()}>
                       {year}
@@ -426,17 +489,17 @@ export function UploadPage() {
             </div>
 
             <div className="space-y-2 lg:col-span-2">
-              <Label htmlFor="lineaTematica">Línea temática *</Label>
+              <Label htmlFor="lineaTematica">Linea tematica *</Label>
               <select
                 id="lineaTematica"
                 className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={formData.lineaTematica}
-                onChange={(e) =>
-                  setFormData({ ...formData, lineaTematica: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, lineaTematica: event.target.value })
                 }
                 required
               >
-                <option value="">Selecciona línea temática</option>
+                <option value="">Selecciona linea tematica</option>
                 {LINEAS_TEMATICAS.map((linea) => (
                   <option key={linea} value={linea}>
                     {linea}
@@ -450,10 +513,10 @@ export function UploadPage() {
               <Textarea
                 id="resumen"
                 value={formData.resumen}
-                onChange={(e) =>
-                  setFormData({ ...formData, resumen: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, resumen: event.target.value })
                 }
-                placeholder="Escribe un resumen del recurso digital (máximo 500 caracteres)"
+                placeholder="Escribe un resumen del recurso digital"
                 rows={4}
                 maxLength={500}
                 required
@@ -468,19 +531,18 @@ export function UploadPage() {
               <Input
                 id="palabrasClave"
                 value={formData.palabrasClave}
-                onChange={(e) =>
-                  setFormData({ ...formData, palabrasClave: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, palabrasClave: event.target.value })
                 }
                 placeholder="Separa las palabras clave con comas"
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Ejemplo: tecnología, educación, innovación
-              </p>
             </div>
 
             <div className="space-y-2 lg:col-span-2">
-              <Label>Archivo PDF {editingPublication ? "(opcional)" : "*"}</Label>
+              <Label>
+                Archivo PDF {editingPublication ? "(opcional)" : "*"}
+              </Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="cursor-pointer rounded-lg border-2 border-dashed border-border p-6 text-center transition-colors hover:border-primary/50 hover:bg-muted/50"
@@ -496,9 +558,7 @@ export function UploadPage() {
                   <div className="flex items-center justify-center gap-3">
                     <FileText className="h-8 w-8 text-primary" />
                     <div className="text-left">
-                      <p className="font-medium text-foreground">
-                        {selectedFile.name}
-                      </p>
+                      <p className="font-medium text-foreground">{selectedFile.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
@@ -507,8 +567,8 @@ export function UploadPage() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      onClick={(event) => {
+                        event.stopPropagation();
                         setSelectedFile(null);
                       }}
                     >
@@ -524,35 +584,54 @@ export function UploadPage() {
                     <p className="text-sm text-muted-foreground">
                       {editingPublication
                         ? "Si no eliges uno nuevo, se conserva el PDF actual."
-                        : "o arrastra y suelta aquí"}
+                        : "Tambien puedes guardarlo primero como borrador."}
                     </p>
                   </>
                 )}
               </div>
             </div>
 
-            <Button
-              type="submit"
-              className="w-full lg:col-span-2"
-              disabled={
-                isSubmitting ||
-                !formData.titulo ||
-                !formData.autor ||
-                !formData.programa ||
-                !formData.lineaTematica ||
-                !formData.resumen ||
-                !formData.palabrasClave ||
-                (!selectedFile && !editingPublication)
-              }
-            >
-              {isSubmitting
-                ? editingPublication
-                  ? "Guardando cambios..."
-                  : "Publicando..."
-                : editingPublication
-                  ? "Guardar cambios"
-                  : "Publicar documento"}
-            </Button>
+            <div className="flex flex-col gap-3 lg:col-span-2 sm:flex-row">
+              <Button
+                type="submit"
+                variant="outline"
+                className="flex-1"
+                disabled={
+                  isSubmitting ||
+                  !formData.titulo ||
+                  !formData.autor ||
+                  !formData.programa ||
+                  !formData.lineaTematica ||
+                  !formData.resumen ||
+                  !formData.palabrasClave ||
+                  (!selectedFile && !editingPublication)
+                }
+                onClick={() => setSubmitMode("draft")}
+              >
+                {isSubmitting && submitMode === "draft"
+                  ? "Guardando..."
+                  : "Guardar borrador"}
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={
+                  isSubmitting ||
+                  !formData.titulo ||
+                  !formData.autor ||
+                  !formData.programa ||
+                  !formData.lineaTematica ||
+                  !formData.resumen ||
+                  !formData.palabrasClave ||
+                  (!selectedFile && !editingPublication)
+                }
+                onClick={() => setSubmitMode("review")}
+              >
+                {isSubmitting && submitMode === "review"
+                  ? "Enviando..."
+                  : "Guardar y enviar a revision"}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
@@ -561,60 +640,102 @@ export function UploadPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <PlusCircle className="h-5 w-5 text-primary" />
-            {user.role === "admin" ? "Todos los documentos" : "Mis documentos"}
+            {user.role === "admin" ? "Todas las publicaciones" : "Mis publicaciones"}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {manageablePublications.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
-              Aún no tienes documentos registrados
+              Aun no tienes publicaciones registradas.
             </div>
           ) : (
             <div className="space-y-4">
-              {manageablePublications.map((publication) => (
-                <div
-                  key={publication.id}
-                  className="flex flex-col gap-4 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="flex-1 space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-medium text-foreground line-clamp-1">
-                        {publication.titulo}
-                      </h4>
-                      <Badge variant={publication.status === "disponible" ? "default" : "secondary"}>
-                        {DOCUMENT_STATUS_LABELS[publication.status]}
-                      </Badge>
+              {manageablePublications.map((publication) => {
+                const latestComment = getLatestWorkflowCommentForPublication(publication.id);
+                const workflowEvents = getWorkflowEventsForPublication(publication.id).slice(0, 3);
+
+                return (
+                  <div
+                    key={publication.id}
+                    className="rounded-2xl border border-border p-5"
+                  >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="font-medium text-foreground">
+                            {publication.titulo}
+                          </h4>
+                          <Badge variant="outline">
+                            {
+                              PUBLICATION_WORKFLOW_STATUS_LABELS[
+                                publication.workflow_status
+                              ]
+                            }
+                          </Badge>
+                          <Badge
+                            variant={
+                              publication.status === "disponible"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
+                            {DOCUMENT_STATUS_LABELS[publication.status]}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {publication.autor} • {publication.programa} • {publication.año}
+                        </p>
+                        <p className="text-sm leading-6 text-muted-foreground">
+                          <span className="font-medium text-foreground">
+                            Observacion mas reciente:
+                          </span>{" "}
+                          {latestComment?.comments || "Todavia no hay observaciones."}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {canSubmitForReview(user, publication) ? (
+                          <Button
+                            size="sm"
+                            onClick={() => void handleSendToReview(publication)}
+                          >
+                            Enviar a revision
+                          </Button>
+                        ) : null}
+                        {canEditDocument(user, publication) ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEdit(publication)}
+                            className="gap-2"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                            Editar
+                          </Button>
+                        ) : null}
+                        {canDeleteDocument(user, publication) ? (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setDeleteId(publication.id)}
+                            className="gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Eliminar
+                          </Button>
+                        ) : null}
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {publication.autor} • {publication.programa} • {publication.año}
-                    </p>
+
+                    <div className="mt-4">
+                      <PublicationWorkflowTimeline
+                        events={workflowEvents}
+                        emptyMessage="Esta publicacion aun no registra eventos."
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {canEditDocument(user, publication) ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(publication)}
-                        className="gap-2"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                        Editar
-                      </Button>
-                    ) : null}
-                    {canDeleteDocument(user, publication) ? (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setDeleteId(publication.id)}
-                        className="gap-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Eliminar
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
@@ -623,16 +744,16 @@ export function UploadPage() {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar publicacion?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El documento será eliminado
+              Esta accion no se puede deshacer. La publicacion sera eliminada
               permanentemente del repositorio.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={() => void handleDelete()}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
               Eliminar

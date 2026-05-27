@@ -25,6 +25,7 @@ type SupabasePublicationRow = {
   linea_tematica: string;
   palabras_clave: string[] | null;
   status: "disponible" | "suspendido";
+  workflow_status: Publication["workflow_status"];
   storage_path: string | null;
   file_name: string | null;
   file_size: number | null;
@@ -56,6 +57,8 @@ function mapRowToPublication(row: SupabasePublicationRow): Publication {
     palabrasClave: row.palabras_clave ?? [],
     status: row.status,
     estado: row.status,
+    workflow_status: row.workflow_status,
+    workflowStatus: row.workflow_status,
     storage_path: row.storage_path ?? "",
     file_name: row.file_name,
     file_size: row.file_size,
@@ -90,7 +93,7 @@ export async function getPublicationById(id: string): Promise<Publication | null
   const { data, error } = await supabase
     .from(PUBLICATIONS_TABLE)
     .select(
-      "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,storage_path,file_name,file_size,created_at,updated_at",
+      "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,workflow_status,storage_path,file_name,file_size,created_at,updated_at",
     )
     .eq("id", id)
     .maybeSingle();

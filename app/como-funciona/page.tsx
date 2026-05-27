@@ -2,54 +2,53 @@ import type { Metadata } from "next";
 import {
   BadgeCheck,
   BookOpen,
+  CheckCircle2,
   CircleHelp,
   CircleX,
-  Eye,
   FileText,
-  Lock,
+  GraduationCap,
   Shield,
   Sparkles,
+  Upload,
   UserRound,
   Workflow,
-  Upload,
-  CheckCircle2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
-  title: "Cómo funciona | Repositorio REDS Colombia",
+  title: "Como funciona | Repositorio REDS Colombia",
   description:
-    "Guía institucional del repositorio: funcionamiento general, roles, permisos y acciones disponibles.",
+    "Guia institucional del repositorio con roles, flujo academico y estados de publicacion.",
 };
 
 const sections = [
-  { id: "vision", label: "Visión general" },
-  { id: "flujo", label: "Flujo de uso" },
+  { id: "vision", label: "Vision general" },
+  { id: "flujo", label: "Flujo academico" },
   { id: "roles", label: "Roles" },
-  { id: "acciones", label: "Acciones principales" },
+  { id: "estados", label: "Estados" },
   { id: "faq", label: "Preguntas frecuentes" },
 ];
 
 const flowSteps = [
   {
-    title: "Explorar",
+    title: "El estudiante prepara el recurso",
     text:
-      "La primera experiencia es pública. Cualquier persona puede navegar publicaciones, leer su información visible y revisar el detalle de los recursos publicados.",
+      "El estudiante crea un borrador, completa metadatos, adjunta el PDF y decide si guarda avances o envia el recurso a revision.",
   },
   {
-    title: "Iniciar sesión solo cuando sea necesario",
+    title: "Revision docente",
     text:
-      "La autenticación aparece cuando el usuario necesita publicar, editar o moderar contenido. Para consultar no se exige ingreso al sistema.",
+      "El docente revisa la publicacion, deja observaciones, solicita ajustes si hace falta o la envia a evaluacion cuando esta lista.",
   },
   {
-    title: "Trabajar según el rol",
+    title: "Evaluacion formal",
     text:
-      "Cada cuenta recibe permisos concretos. El sistema separa las tareas para evitar cruces innecesarios y mantener la administración ordenada.",
+      "El evaluador inicia la evaluacion, aprueba, rechaza o devuelve con observaciones. Todas las decisiones quedan registradas en la bitacora.",
   },
   {
-    title: "Controlar el estado del documento",
+    title: "Publicacion y control administrativo",
     text:
-      "Las publicaciones pueden estar disponibles o suspendidas. Ese estado define si aparecen en la vista pública o si permanecen solo para gestión interna.",
+      "El admin conserva control total: administra usuarios y roles, publica recursos aprobados y puede suspenderlos si el contexto institucional lo exige.",
   },
 ];
 
@@ -61,113 +60,113 @@ const roles = [
     border: "border-sky-200",
     background: "bg-sky-50/70",
     summary:
-      "Es el rol base de la plataforma. Publica sus propios documentos y administra únicamente lo que le pertenece.",
+      "Es el autor del recurso. Gestiona sus propios documentos dentro del flujo academico.",
     can: [
-      "Subir documentos en PDF.",
-      "Editar la información de sus propios documentos cuando están disponibles.",
-      "Eliminar sus propios documentos cuando están disponibles.",
-      "Explorar y consultar los documentos publicados por la comunidad.",
-      "Buscar y filtrar publicaciones desde las vistas públicas.",
+      "Subir un recurso en PDF y guardar borradores.",
+      "Editar y eliminar sus propios recursos cuando estan en borrador o con ajustes solicitados.",
+      "Enviar sus recursos a revision docente.",
+      "Ver el estado academico, la visibilidad y las observaciones del recurso.",
     ],
     cannot: [
-      "No puede suspender ni reactivar documentos.",
-      "No puede editar ni eliminar documentos de otras personas.",
-      "No puede administrar usuarios ni modificar roles.",
-      "No puede acceder a la vista de moderación ni a la vista unificada de gestión.",
+      "No puede revisar publicaciones de otros usuarios.",
+      "No puede evaluar, aprobar, rechazar ni publicar recursos ajenos.",
+      "No puede administrar usuarios ni cambiar roles.",
     ],
   },
   {
-    title: "Moderador",
-    icon: Shield,
+    title: "Docente",
+    icon: GraduationCap,
     color: "text-amber-700",
     border: "border-amber-200",
     background: "bg-amber-50/70",
     summary:
-      "Supervisa el estado de las publicaciones y mantiene el contenido visible dentro de las reglas del repositorio.",
+      "Acompana la calidad academica inicial del recurso antes de la evaluacion formal.",
     can: [
-      "Ver todas las publicaciones del sistema.",
-      "Suspender publicaciones que no deban estar visibles.",
-      "Reactivar publicaciones suspendidas cuando corresponda.",
-      "Usar la vista unificada para buscar, filtrar y revisar documentos.",
-      "Abrir el detalle y descargar PDFs públicos cuando estén disponibles.",
+      "Ver la cola de revision docente.",
+      "Iniciar revision sobre publicaciones enviadas.",
+      "Solicitar ajustes con observaciones trazables.",
+      "Enviar a evaluacion los recursos listos.",
     ],
     cannot: [
-      "No puede editar el contenido ni los metadatos de una publicación.",
-      "No puede eliminar publicaciones.",
-      "No puede crear, editar o eliminar usuarios.",
-      "No puede cambiar roles de otros usuarios.",
+      "No puede administrar usuarios ni cambiar roles.",
+      "No puede publicar recursos al sitio publico.",
+      "No puede editar el contenido del estudiante directamente.",
     ],
   },
   {
-    title: "Admin",
+    title: "Evaluador",
+    icon: Shield,
+    color: "text-violet-700",
+    border: "border-violet-200",
+    background: "bg-violet-50/70",
+    summary:
+      "Realiza la evaluacion formal del recurso y deja evidencia academica de la decision.",
+    can: [
+      "Ver la cola de evaluacion.",
+      "Iniciar evaluacion formal.",
+      "Aprobar, rechazar o devolver con observaciones.",
+      "Consultar la bitacora academica del recurso.",
+    ],
+    cannot: [
+      "No puede administrar usuarios ni cambiar roles.",
+      "No puede publicar directamente al sitio publico.",
+      "No puede modificar metadatos del estudiante fuera del flujo.",
+    ],
+  },
+  {
+    title: "Administrador",
     icon: BadgeCheck,
     color: "text-emerald-700",
     border: "border-emerald-200",
     background: "bg-emerald-50/70",
     summary:
-      "Tiene control total sobre el repositorio: publicaciones, usuarios, roles y moderación general del sistema.",
+      "Tiene control total sobre usuarios, roles, estados de publicaciones y visibilidad final.",
     can: [
-      "Ver todas las publicaciones.",
-      "Editar cualquier publicación.",
-      "Eliminar cualquier publicación.",
-      "Suspender y reactivar publicaciones.",
-      "Administrar usuarios y cambiar roles.",
-      "Acceder a todas las vistas internas del sistema.",
+      "Administrar usuarios y roles del sistema.",
+      "Ver todas las publicaciones y sus bitacoras.",
+      "Publicar recursos aprobados y suspender recursos publicados.",
+      "Actuar como respaldo operativo en cualquier etapa del flujo.",
     ],
     cannot: [
-      "No tiene restricciones operativas dentro del flujo normal del repositorio.",
-      "Debe seguir la política institucional de uso y gestión del contenido.",
+      "No tiene restricciones operativas dentro del flujo normal.",
+      "Debe mantener trazabilidad y criterio institucional en cada override.",
     ],
   },
 ];
 
-const actions = [
-  {
-    icon: Upload,
-    title: "Publicar",
-    text:
-      "La publicación la realiza un usuario autenticado que dispone de permisos de carga. El sistema solicita la información necesaria, valida el archivo y deja el documento disponible para consulta cuando cumple las reglas de visibilidad.",
-  },
-  {
-    icon: Eye,
-    title: "Consultar",
-    text:
-      "Cualquier visitante puede buscar, filtrar y abrir documentos visibles. Esta capa pública está pensada para lectura y revisión, no para edición ni moderación.",
-  },
-  {
-    icon: Workflow,
-    title: "Gestionar",
-    text:
-      "La vista unificada agrupa búsqueda, filtros y acciones internas. Allí moderadores y administradores trabajan sobre el conjunto completo de publicaciones sin duplicar pantallas.",
-  },
-  {
-    icon: Lock,
-    title: "Restringir",
-    text:
-      "Cuando una publicación se suspende, deja de mostrarse en la parte pública. Sigue existiendo en el sistema para que un moderador o un admin decidan si debe reactivarse o retirarse definitivamente.",
-  },
+const states = [
+  "borrador",
+  "enviada",
+  "en_revision_docente",
+  "ajustes_solicitados",
+  "enviada_a_evaluacion",
+  "en_evaluacion",
+  "aprobada",
+  "rechazada",
+  "publicada",
+  "suspendida",
 ];
 
 const faq = [
   {
-    question: "¿Necesito iniciar sesión para explorar publicaciones?",
+    question: "Necesito iniciar sesion para explorar publicaciones?",
     answer:
-      "No. La exploración y consulta pública están disponibles sin autenticación. Solo las acciones de subida y gestión requieren sesión.",
+      "No. La consulta publica sigue disponible sin autenticacion. El login solo es necesario para actuar dentro del flujo academico.",
   },
   {
-    question: "¿Qué significa que un documento esté suspendido?",
+    question: "Que pasa con el rol moderador?",
     answer:
-      "Que no debe aparecer en la vista pública de exploración. El documento sigue existiendo en el sistema y puede ser reactivado por un moderador o un admin.",
+      "Se mantiene solo como compatibilidad temporal. En la operacion academica actual se trata como alias de evaluador, mientras el modelo final visible usa estudiante, docente, evaluador y admin.",
   },
   {
-    question: "¿Puedo editar una publicación que no sea mía?",
+    question: "Quien puede pedir ajustes?",
     answer:
-      "No. La edición de documentos propios está reservada al estudiante dueño del contenido o al admin, según las reglas configuradas.",
+      "El docente durante la revision academica y el evaluador cuando devuelve con observaciones durante la evaluacion formal.",
   },
   {
-    question: "¿Dónde hago las acciones de gestión?",
+    question: "Quien publica el recurso al repositorio publico?",
     answer:
-      "Desde la vista unificada de gestión de publicaciones, que concentra búsqueda, filtros y acciones por rol.",
+      "Solo el admin publica un recurso que ya fue aprobado academicamente.",
   },
 ];
 
@@ -213,9 +212,7 @@ function RoleSection({
   cannot: string[];
 }) {
   return (
-    <section
-      className={`rounded-3xl border ${border} ${background} p-6 shadow-sm`}
-    >
+    <section className={`rounded-3xl border ${border} ${background} p-6 shadow-sm`}>
       <div className="flex items-start gap-4">
         <div className={`rounded-2xl bg-background p-3 shadow-sm ${color}`}>
           <Icon className="h-5 w-5" />
@@ -270,56 +267,51 @@ export default function Page() {
             <div className="mb-8 flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary">
                 <Sparkles className="h-3.5 w-3.5" />
-                Guía institucional
+                Guia institucional
               </Badge>
               <Badge variant="outline" className="gap-1">
                 <BookOpen className="h-3.5 w-3.5" />
-                Cómo funciona
+                Como funciona
               </Badge>
             </div>
 
             <div className="max-w-4xl">
               <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Guía de funcionamiento y roles
+                Guia de funcionamiento y roles
               </h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-                Esta página explica de manera extensa cómo funciona el repositorio,
-                qué puede hacer cada rol y qué acciones están permitidas o restringidas.
-                La idea es que cualquier usuario entienda la lógica de uso sin tener
-                que adivinar dónde se encuentra cada función.
+                El repositorio combina consulta publica con un flujo academico real de
+                borrador, revision docente, evaluacion formal, aprobacion y publicacion.
               </p>
             </div>
 
             <section id="vision" className="mt-16 scroll-mt-24">
               <SectionHeading
-                eyebrow="Visión general"
-                title="Qué es el repositorio y cómo se usa"
-                description="El repositorio centraliza recursos digitales académicos. Los usuarios pueden consultarlos públicamente, mientras que la creación y la gestión están reservadas a roles internos con permisos específicos."
+                eyebrow="Vision general"
+                title="Un repositorio publico con control academico interno"
+                description="La exploracion publica se mantiene simple, mientras que la gestion interna usa roles y estados para asegurar trazabilidad, calidad y decisiones realistas."
               />
 
               <div className="mt-6 rounded-3xl border border-border/70 bg-card/80 p-7 shadow-sm">
                 <div className="grid gap-6 lg:grid-cols-2">
                   <div className="space-y-4 text-sm leading-7 text-muted-foreground">
                     <p>
-                      La experiencia pública está pensada para explorar y consultar.
-                      La experiencia interna está pensada para administrar contenido,
-                      corregir estados y mantener el repositorio ordenado.
+                      Los recursos visibles al publico son los que ya completaron el
+                      flujo academico y llegaron al estado <strong>publicada</strong>.
                     </p>
                     <p>
-                      Un documento puede estar disponible o suspendido. Cuando está
-                      suspendido, deja de aparecer en la exploración general, aunque sigue
-                      existiendo en el sistema para tareas de moderación o administración.
+                      Cada cambio de estado registra actor, rol, accion y observaciones
+                      para que el estudiante pueda seguir el proceso de su recurso.
                     </p>
                   </div>
                   <div className="space-y-4 text-sm leading-7 text-muted-foreground">
                     <p>
-                      Los roles no se crean para complicar el uso, sino para separar
-                      responsabilidades: cada persona ve solo lo que necesita para trabajar
-                      bien y con seguridad.
+                      La navegacion cambia segun rol para que cada perfil vea solo las
+                      rutas y acciones que realmente necesita.
                     </p>
                     <p>
-                      Así se evita que una acción operativa, como editar o suspender, termine
-                      en manos de un perfil que solo debe consultar o publicar contenido propio.
+                      Asi se separan responsabilidades entre autoria, revision,
+                      evaluacion y administracion institucional.
                     </p>
                   </div>
                 </div>
@@ -328,9 +320,9 @@ export default function Page() {
 
             <section id="flujo" className="mt-16 scroll-mt-24">
               <SectionHeading
-                eyebrow="Flujo de uso"
-                title="Cómo se recorre la plataforma paso a paso"
-                description="La secuencia de trabajo es simple: consultar, autenticarse cuando sea necesario, actuar según el rol y controlar el estado de cada documento."
+                eyebrow="Flujo academico"
+                title="Como avanza un recurso desde borrador hasta publicacion"
+                description="El sistema evita saltos manuales y conduce el recurso por etapas claras, con acciones especificas por rol."
               />
 
               <div className="mt-6 space-y-4">
@@ -360,8 +352,8 @@ export default function Page() {
             <section id="roles" className="mt-16 scroll-mt-24">
               <SectionHeading
                 eyebrow="Roles"
-                title="Qué hace cada perfil y qué no puede hacer"
-                description="Cada rol tiene un alcance distinto. Esa separación permite controlar el contenido, proteger los datos y mantener el repositorio operable sin mezclar responsabilidades."
+                title="Que hace cada perfil y donde actua"
+                description="El modelo academico final queda compuesto por estudiante, docente, evaluador y admin. Moderador se conserva solo como compatibilidad temporal."
               />
 
               <div className="mt-6 space-y-6">
@@ -371,46 +363,41 @@ export default function Page() {
               </div>
             </section>
 
-            <section id="acciones" className="mt-16 scroll-mt-24">
+            <section id="estados" className="mt-16 scroll-mt-24">
               <SectionHeading
-                eyebrow="Acciones principales"
-                title="Cómo se publica, consulta, gestiona y restringe"
-                description="Las funciones principales están distribuidas para que la experiencia sea clara: publicar para quien aporta contenido, consultar para quien navega y gestionar para quien administra el sistema."
+                eyebrow="Estados"
+                title="Estados soportados por el workflow"
+                description="Estos estados se reflejan en la base de datos, en los paneles internos y en la bitacora visible de cada recurso."
               />
 
-              <div className="mt-6 grid gap-4">
-                {actions.map((action) => {
-                  const Icon = action.icon;
-
-                  return (
+              <div className="mt-6 rounded-3xl border border-border/70 bg-card/80 p-7 shadow-sm">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {states.map((state) => (
                     <div
-                      key={action.title}
-                      className="rounded-2xl border border-border/70 bg-card/80 p-6 shadow-sm"
+                      key={state}
+                      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-foreground"
                     >
-                      <div className="flex items-start gap-4">
-                        <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-foreground">
-                            {action.title}
-                          </h3>
-                          <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                            {action.text}
-                          </p>
-                        </div>
-                      </div>
+                      <Workflow className="h-4 w-4 text-primary" />
+                      <span>{state}</span>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-border/70 bg-muted/40 p-4 text-sm leading-7 text-muted-foreground">
+                  <p className="font-semibold text-foreground">Regla clave</p>
+                  <p className="mt-2">
+                    El estado academico y la visibilidad publica son capas distintas. Un
+                    recurso solo aparece al publico cuando llega a <strong>publicada</strong>.
+                  </p>
+                </div>
               </div>
             </section>
 
             <section id="faq" className="mt-16 scroll-mt-24">
               <SectionHeading
                 eyebrow="Preguntas frecuentes"
-                title="Dudas comunes sobre uso y permisos"
-                description="Estas respuestas resumen las reglas básicas de la plataforma y ayudan a entender qué esperar de cada vista y cada rol."
+                title="Dudas comunes sobre el flujo y los permisos"
+                description="Estas respuestas resumen la logica operativa actual del repositorio."
               />
 
               <div className="mt-6 space-y-4">
@@ -440,10 +427,10 @@ export default function Page() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Índice
+                    Indice
                   </p>
                   <h2 className="text-lg font-semibold text-foreground">
-                    Navegación rápida
+                    Navegacion rapida
                   </h2>
                 </div>
               </div>
@@ -456,7 +443,7 @@ export default function Page() {
                     className="flex items-center justify-between rounded-2xl border border-transparent px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
                   >
                     <span>{section.label}</span>
-                    <span className="text-xs text-muted-foreground/70">→</span>
+                    <span className="text-xs text-muted-foreground/70">-&gt;</span>
                   </a>
                 ))}
               </nav>
@@ -464,8 +451,19 @@ export default function Page() {
               <div className="mt-6 rounded-2xl border border-border/70 bg-muted/40 p-4 text-sm leading-7 text-muted-foreground">
                 <p className="font-semibold text-foreground">Idea central</p>
                 <p className="mt-2">
-                  Consulta para explorar, autentícate para actuar y usa cada rol solo
-                  dentro de su alcance.
+                  Consulta para explorar, inicia sesion para actuar y deja que cada
+                  rol opere dentro de su parte del workflow.
+                </p>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-border/70 bg-primary/5 p-4 text-sm leading-7 text-muted-foreground">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Upload className="h-4 w-4 text-primary" />
+                  Evidencia visible
+                </div>
+                <p className="mt-2">
+                  El estudiante ve su estado y observaciones. Docente, evaluador y
+                  admin ven acciones distintas segun sus permisos.
                 </p>
               </div>
             </div>

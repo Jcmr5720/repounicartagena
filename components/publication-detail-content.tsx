@@ -12,7 +12,14 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useSpeech } from "@/hooks/use-speech";
-import type { Publication } from "@/lib/types";
+import { PublicationMetadataSection } from "@/components/publication-metadata-section";
+import { PublicationWorkflowTimeline } from "@/components/publication-workflow-timeline";
+import { usePublications } from "@/lib/publications-context";
+import {
+  DOCUMENT_STATUS_LABELS,
+  PUBLICATION_WORKFLOW_STATUS_LABELS,
+  type Publication,
+} from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +30,7 @@ interface PublicationDetailContentProps {
 export function PublicationDetailContent({
   publication,
 }: PublicationDetailContentProps) {
+  const { getWorkflowEventsForPublication } = usePublications();
   const {
     cancelSpeaking,
     error,
@@ -30,6 +38,7 @@ export function PublicationDetailContent({
     isSynthesisSupported,
     speak,
   } = useSpeech();
+  const workflowEvents = getWorkflowEventsForPublication(publication.id);
 
   const spokenSummary = useMemo(() => {
     const content = [
@@ -75,14 +84,21 @@ export function PublicationDetailContent({
         </div>
         <div className="flex items-center gap-2 text-sm">
           <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Estado:</span>
+          <span className="text-muted-foreground">Visibilidad:</span>
           <Badge
             variant={publication.status === "disponible" ? "default" : "secondary"}
             className={
               publication.status === "disponible" ? "bg-green-100 text-green-800" : ""
             }
           >
-            {publication.status === "disponible" ? "Disponible" : "Suspendido"}
+            {DOCUMENT_STATUS_LABELS[publication.status]}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2 text-sm sm:col-span-2">
+          <FileText className="h-4 w-4 text-muted-foreground" />
+          <span className="text-muted-foreground">Flujo academico:</span>
+          <Badge variant="outline">
+            {PUBLICATION_WORKFLOW_STATUS_LABELS[publication.workflow_status]}
           </Badge>
         </div>
       </div>
@@ -153,6 +169,16 @@ export function PublicationDetailContent({
           ))}
         </div>
       </div>
+
+      <div>
+        <h4 className="mb-3 font-semibold text-foreground">Bitacora del flujo</h4>
+        <PublicationWorkflowTimeline
+          events={workflowEvents}
+          emptyMessage="Este recurso no tiene eventos visibles para tu sesion actual."
+        />
+      </div>
+
+      <PublicationMetadataSection publication={publication} />
 
       <div className="text-sm text-muted-foreground">
         Publicado el{" "}

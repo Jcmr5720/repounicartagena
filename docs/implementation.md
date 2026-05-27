@@ -1,78 +1,123 @@
-﻿# Implementación de roles, permisos y documentos
+# Implementacion de roles, permisos y workflow academico
 
-## Qué se hizo
+## Resumen
 
-Se reemplazó la lógica anterior basada en `user_metadata` y `localStorage` por un modelo real en Supabase.
+El sistema ya no trabaja solo con publicacion y moderacion basica. Ahora implementa
+un flujo academico real con roles diferenciados, estados auditables y evidencia
+visible en frontend y Supabase.
 
-### Perfiles
+## Roles y compatibilidad
 
-- Se adaptó la tabla de perfiles a `public.cartagena_usuario_usuario`.
-- Se agregó el rol `moderador`.
-- Se creó un trigger para crear perfiles automáticamente al registrarse un usuario.
-- Se activó RLS con políticas para lectura y actualización segura.
+- Se mantienen como roles tecnicos `estudiante`, `docente`, `evaluador` y `admin`.
+- `moderador` queda como compatibilidad temporal y se mapea funcionalmente a
+  `evaluador`.
+- La UI muestra "Administrador" para `admin`, pero en codigo y base de datos se
+  conserva la convencion `admin`.
 
-### Documentos
+## Supabase
 
-- Se creó `public.cartagena_producto_producto`.
-- Se normalizó el campo de programa con `public.cartagena_producto_programa`.
-- `cartagena_producto_producto` ahora guarda `programa_id` como FK al catálogo de programas.
-- Se agregó el estado `disponible | suspendido`.
-- Se conectó la gestión de documentos a Supabase Database y Supabase Storage.
-- Se protegieron las operaciones con RLS.
+### Cambios principales
 
-### Frontend
+- Se amplio `public.user_role` con `docente` y `evaluador`.
+- Se creo el enum `public.cartagena_publication_workflow_status`.
+- Se agrego `workflow_status` a `public.cartagena_producto_producto`.
+- Se sincroniza la visibilidad publica desde el workflow mediante trigger.
+- Se creo la funcion `public.cartagena_apply_publication_workflow_action(...)`
+  para ejecutar transiciones validas.
 
-- El contexto de auth ahora lee el perfil desde `public.cartagena_usuario_usuario`.
-- La navegación cambia según rol.
-- Se agregó una vista de administración para `admin`.
-- Se agregó una vista de moderación para `moderador` y `admin`.
-- La pantalla de subida ahora también sirve para editar y eliminar documentos propios.
+### Tablas nuevas
 
-## Comportamiento por rol
+- `public.cartagena_publication_reviews`
+- `public.cartagena_publication_evaluations`
+- `public.cartagena_publication_workflow_events`
+
+### Objetos nuevos con prefijo `cartagena_`
+
+- tablas
+- policies
+- funciones
+- triggers
+- enum de workflow
+
+## Permisos implementados
+
+La matriz de permisos quedo centralizada en `lib/permissions.ts`.
 
 ### Estudiante
 
-- Ve documentos disponibles.
-- Puede subir documentos.
-- Puede editar y eliminar solo los suyos y solo si están disponibles.
-- No puede suspender documentos.
-- No puede cambiar roles.
+- subir recursos
+- editar y eliminar recursos propios segun estado
+- enviar a revision
 
-### Moderador
+### Docente
 
-- Ve todos los documentos.
-- Puede suspender y reactivar documentos.
-- No puede administrar usuarios.
-- No puede cambiar roles.
+- acceder a revision docente
+- iniciar revision
+- solicitar ajustes
+- enviar a evaluacion
+
+### Evaluador
+
+- acceder a evaluacion
+- iniciar evaluacion
+- aprobar
+- rechazar
+- devolver con observaciones
 
 ### Admin
 
-- Tiene acceso total.
-- Puede administrar usuarios.
-- Puede cambiar roles.
-- Puede editar, eliminar, suspender y reactivar cualquier documento.
+- control total de usuarios, roles y publicaciones
+- publicar recursos aprobados
+- suspender recursos publicados
 
-## Migración principal
+## Frontend
 
-Archivo:
+### Navegacion
+
+- `components/header.tsx` cambia enlaces segun rol.
+- El menu de usuario expone solo rutas permitidas.
+
+### Rutas funcionales
+
+- `/subir`: flujo del estudiante y administracion de recursos propios.
+- `/moderacion`: revision docente.
+- `/gestion-publicaciones`: evaluacion formal y decisiones academicas.
+- `/admin`: administracion total del sistema.
+
+### Evidencia visible
+
+- El estudiante ve estado academico, visibilidad y observaciones.
+- El docente ve botones `Revisar`, `Solicitar ajustes` y `Enviar a evaluacion`.
+- El evaluador ve `Evaluar`, `Aprobar`, `Rechazar` y `Devolver con observaciones`.
+- El admin conserva acciones globales y puede `Publicar` o `Suspender`.
+
+## Workflow academico
+
+Estados soportados:
+
+- `borrador`
+- `enviada`
+- `en_revision_docente`
+- `ajustes_solicitados`
+- `enviada_a_evaluacion`
+- `en_evaluacion`
+- `aprobada`
+- `rechazada`
+- `publicada`
+- `suspendida`
+
+La bitacora se guarda en `cartagena_publication_workflow_events` y se expone en la
+ficha del recurso, en el panel del estudiante, en revision docente y en evaluacion.
+
+## Migraciones relevantes
 
 - `supabase/migrations/20260522000200_roles_profiles_documents.sql`
 - `supabase/migrations/20260523000300_cartagena_producto_programa.sql`
+- `supabase/migrations/20260527000100_cartagena_role_expansion.sql`
+- `supabase/migrations/20260527000200_cartagena_academic_workflow.sql`
 
-Esos archivos incluyen:
+## Verificacion esperada
 
-- enums de rol y estado,
-- triggers de sincronización con Auth,
-- policies RLS para `cartagena_usuario_usuario`, `cartagena_producto_producto` y `cartagena_producto_programa`,
-- policies del bucket de Storage `documents`.
-
-## Verificación
-
-- `npm run lint` pasó.
-- `npm run build` pasó.
-
-## Notas
-
-- La historia de migraciones quedó alineada entre local y remoto.
-- El esquema remoto recibió la migración nueva.
-- Si el entorno local de Supabase no está levantado, la historia sigue alineada en el repo y puede aplicarse al arrancar el stack local.
+- `npm run lint`
+- `npm run build`
+- aplicacion de migraciones y despliegue de funcion `cartagena_upload`

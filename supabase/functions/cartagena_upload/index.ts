@@ -26,6 +26,7 @@ type UploadPayload = {
   anio: number;
   linea_tematica: string;
   palabras_clave: string[];
+  workflow_status: string;
   document_id?: string;
   file: File;
 };
@@ -119,7 +120,7 @@ async function requireAuthenticatedUser(
 async function getPublicationById(client: SupabaseClient, documentId: string) {
   const { data, error } = await client
     .from(PUBLICATIONS_TABLE)
-    .select("id,owner_id,status,storage_path")
+    .select("id,owner_id,status,workflow_status,storage_path")
     .eq("id", documentId)
     .maybeSingle();
 
@@ -161,6 +162,7 @@ async function handleUpload(request: Request) {
   const lineaTematica = normalizeText(formData.get("linea_tematica"));
   const anio = Number.parseInt(normalizeText(formData.get("anio")), 10);
   const palabrasClave = parseKeywords(formData.get("palabras_clave"));
+  const workflowStatus = normalizeText(formData.get("workflow_status")) || "borrador";
 
   if (!title || !description || !autor || !programaId || !lineaTematica || !Number.isFinite(anio)) {
     return jsonResponse({ error: "Missing required upload fields" }, 400);
@@ -199,7 +201,13 @@ async function handleUpload(request: Request) {
   }
 
   let existingDocument:
-    | { id: string; owner_id: string; status: string; storage_path: string | null }
+    | {
+        id: string;
+        owner_id: string;
+        status: string;
+        workflow_status: string;
+        storage_path: string | null;
+      }
     | undefined;
 
   if (documentId) {
@@ -214,8 +222,18 @@ async function handleUpload(request: Request) {
       return jsonResponse({ error: "You do not have permission to edit this document" }, 403);
     }
 
-    if (profile.role !== "admin" && existingDocument.status !== "disponible") {
-      return jsonResponse({ error: "Only available documents can be edited by students" }, 403);
+    if (
+      profile.role !== "admin" &&
+      existingDocument.workflow_status !== "borrador" &&
+      existingDocument.workflow_status !== "ajustes_solicitados"
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "Only draft or adjustment publications can be edited by students",
+        },
+        403,
+      );
     }
   }
 
@@ -241,6 +259,7 @@ async function handleUpload(request: Request) {
     anio,
     linea_tematica: lineaTematica,
     palabras_clave: palabrasClave,
+    workflow_status: workflowStatus,
     document_id: documentId,
     file,
   };
@@ -256,6 +275,7 @@ async function handleUpload(request: Request) {
         anio: payload.anio,
         linea_tematica: payload.linea_tematica,
         palabras_clave: payload.palabras_clave,
+        workflow_status: payload.workflow_status,
         storage_path: storagePath,
         file_name: file.name,
         file_size: file.size,
@@ -302,7 +322,7 @@ async function handleUpload(request: Request) {
       anio: payload.anio,
       linea_tematica: payload.linea_tematica,
       palabras_clave: payload.palabras_clave,
-      status: "disponible",
+      workflow_status: payload.workflow_status,
       storage_path: storagePath,
       file_name: file.name,
       file_size: file.size,

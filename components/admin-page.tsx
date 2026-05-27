@@ -26,7 +26,7 @@ import type { Profile, UserRole } from "@/lib/types";
 import { ROLE_LABELS } from "@/lib/types";
 import { isAdmin } from "@/lib/permissions";
 
-const ROLE_OPTIONS: UserRole[] = ["estudiante", "moderador", "admin"];
+const ROLE_OPTIONS: UserRole[] = ["estudiante", "docente", "evaluador", "admin"];
 
 export function AdminPage() {
   const { user, isLoading, updateUserRole } = useAuth();
@@ -70,12 +70,18 @@ export function AdminPage() {
   }, [isLoading, supabase, user]);
 
   const counts = useMemo(() => {
-    const moderatorCount = profiles.filter((profile) => profile.role === "moderador").length;
+    const docenteCount = profiles.filter((profile) => profile.role === "docente").length;
+    const evaluadorCount = profiles.filter(
+      (profile) => profile.role === "evaluador" || profile.role === "moderador",
+    ).length;
     const adminCount = profiles.filter((profile) => profile.role === "admin").length;
-    const suspendedDocs = publications.filter((publication) => publication.status === "suspendido").length;
+    const suspendedDocs = publications.filter(
+      (publication) => publication.workflow_status === "suspendida",
+    ).length;
 
     return {
-      moderatorCount,
+      docenteCount,
+      evaluadorCount,
       adminCount,
       suspendedDocs,
     };
@@ -171,7 +177,7 @@ export function AdminPage() {
         </div>
       ) : null}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-4">
+      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card className="border-border">
           <CardContent className="flex items-center gap-4 p-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
@@ -214,8 +220,20 @@ export function AdminPage() {
               <Shield className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{counts.moderatorCount}</p>
-              <p className="text-sm text-muted-foreground">Moderadores</p>
+              <p className="text-2xl font-bold text-foreground">{counts.docenteCount}</p>
+              <p className="text-sm text-muted-foreground">Docentes</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardContent className="flex items-center gap-4 p-6">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
+              <Shield className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{counts.evaluadorCount}</p>
+              <p className="text-sm text-muted-foreground">Evaluadores</p>
             </div>
           </CardContent>
         </Card>
