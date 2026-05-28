@@ -28,7 +28,7 @@ export function PublicationDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
@@ -41,6 +41,10 @@ export function PublicationDetailModal({
               <DialogTitle className="text-xl leading-tight">
                 {publication.titulo}
               </DialogTitle>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Autor: {publication.autor} · Subido por{" "}
+                {publication.owner_name || publication.owner_username || "No disponible"}
+              </p>
             </div>
           </div>
         </DialogHeader>

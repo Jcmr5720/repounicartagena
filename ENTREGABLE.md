@@ -60,6 +60,12 @@ La tabla `cartagena_publication_evaluations` persiste como minimo:
 Ademas, el sistema impide decisiones sin evidencia academica completa antes de
 aprobar, rechazar o devolver con observaciones.
 
+Tambien queda implementada la verificacion previa del recurso dentro de
+`/gestion-publicaciones`: `admin` y `evaluador` ahora pueden abrir
+`Ver publicacion completa` y revisar metadatos, PDF, bitacora, evaluacion,
+observaciones, puntaje, fortalezas, mejoras y datos del docente/subidor antes
+de decidir.
+
 Tambien se implementa carga de PDF, detalle descargable, workflow de estados y
 favoritos persistentes en Supabase.
 
@@ -118,6 +124,10 @@ El flujo academico implementado es:
 La publicacion final publica sigue en manos de `admin` por compatibilidad y
 control institucional.
 
+La misma vista de gestion incorpora ademas `Historico de mis evaluaciones` para
+el rol `evaluador`, lo que permite revisar la ultima decision propia por
+publicacion.
+
 **Conclusion:**  
 Si esta implementado.
 
@@ -132,7 +142,9 @@ Parcialmente implementado.
 **Respuesta tecnica:**  
 El prototipo es funcional, consistente y adecuado para el contexto
 institucional. La propuesta visual es sobria y clara, con foco en legibilidad,
-flujo academico y paneles operativos.
+flujo academico y paneles operativos. El header incorpora contador visible de
+favoritos y la pantalla `/gestion-publicaciones` ahora separa mejor la revision
+del recurso, la evaluacion y las acciones administrativas.
 
 **Conclusion:**  
 La mayor parte del criterio esta implementada, aunque el componente de

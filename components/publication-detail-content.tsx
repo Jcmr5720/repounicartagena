@@ -120,6 +120,13 @@ export function PublicationDetailContent({
             <span className="font-medium text-foreground">{publication.autor}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Docente que subio:</span>
+            <span className="font-medium text-foreground">
+              {publication.owner_name || publication.owner_username || "No disponible"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Año:</span>
             <span className="font-medium text-foreground">{publication.año}</span>
@@ -302,6 +309,16 @@ export function PublicationDetailContent({
                       {latestEvaluation.evaluator_id
                         ? `Usuario ${latestEvaluation.evaluator_id.slice(0, 8)}`
                         : "No disponible"}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="font-medium text-foreground">Estado evaluado:</span>{" "}
+                    <span className="text-muted-foreground">
+                      {
+                        PUBLICATION_WORKFLOW_STATUS_LABELS[
+                          latestEvaluation.workflow_status
+                        ]
+                      }
                     </span>
                   </p>
                 </div>

@@ -199,6 +199,8 @@ function mapRowToPublication(
   return {
     id: row.id,
     owner_id: row.owner_id,
+    owner_name: row.autor?.trim() || null,
+    owner_username: null,
     title: row.title,
     titulo: row.title,
     description: row.description,
@@ -540,7 +542,9 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     });
 
     setPublications(documentsWithUrls);
-    await loadWorkflowArtifacts(documentsWithUrls.map((publication) => publication.id));
+    await loadWorkflowArtifacts(
+      documentsWithUrls.map((publication) => publication.id),
+    );
     await loadFavorites();
     setIsLoading(false);
   }, [

@@ -73,6 +73,8 @@ export type User = Profile;
 export interface Document {
   id: string;
   owner_id: string;
+  owner_name?: string | null;
+  owner_username?: string | null;
   title: string;
   titulo: string;
   description: string;

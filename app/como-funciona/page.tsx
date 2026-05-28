@@ -3,9 +3,9 @@ import {
   BadgeCheck,
   BookOpen,
   CheckCircle2,
+  ChevronRight,
   CircleHelp,
   CircleX,
-  FileHeart,
   FileText,
   GraduationCap,
   Shield,
@@ -21,9 +21,11 @@ export const metadata: Metadata = {
     "Guia clara del repositorio con roles, flujo de publicacion, evaluacion formal y favoritos.",
 };
 
+/* ─── Datos ─────────────────────────────────────────────────────── */
+
 const sections = [
-  { id: "vision", label: "Vision general" },
-  { id: "flujo", label: "Flujo academico" },
+  { id: "vision", label: "Visión general" },
+  { id: "flujo", label: "Flujo académico" },
   { id: "roles", label: "Roles" },
   { id: "estados", label: "Estados" },
   { id: "faq", label: "Preguntas frecuentes" },
@@ -31,24 +33,32 @@ const sections = [
 
 const flowSteps = [
   {
+    icon: "01",
+    actor: "Docente",
+    actorColor: "bg-amber-100 text-amber-700",
     title: "El docente crea el recurso",
-    text:
-      "El docente registra la informacion del recurso, adjunta el PDF y lo deja en borrador hasta terminarlo.",
+    text: "El docente registra la información del recurso, adjunta el PDF y lo deja en borrador hasta terminarlo.",
   },
   {
-    title: "El docente envia a evaluacion",
-    text:
-      "Cuando el recurso esta listo, el docente lo envia para que pase a revision academica.",
+    icon: "02",
+    actor: "Docente",
+    actorColor: "bg-amber-100 text-amber-700",
+    title: "El docente envía a evaluación",
+    text: "Cuando el recurso está listo, el docente lo envía para que pase a revisión académica.",
   },
   {
-    title: "El evaluador decide con rubrica",
-    text:
-      "El evaluador diligencia la rubrica, asigna puntajes, escribe fortalezas, mejoras y observaciones, y decide desde la misma pantalla.",
+    icon: "03",
+    actor: "Evaluador",
+    actorColor: "bg-violet-100 text-violet-700",
+    title: "El evaluador decide con rúbrica",
+    text: "El evaluador diligencia la rúbrica, asigna puntajes, escribe fortalezas, mejoras y observaciones, y decide desde la misma pantalla.",
   },
   {
+    icon: "04",
+    actor: "Administrador",
+    actorColor: "bg-emerald-100 text-emerald-700",
     title: "El administrador publica al final",
-    text:
-      "Si el recurso fue aprobado, el administrador hace la publicacion final y puede retirarlo si hace falta.",
+    text: "Si el recurso fue aprobado, el administrador hace la publicación final y puede retirarlo si hace falta.",
   },
 ];
 
@@ -56,11 +66,12 @@ const roles = [
   {
     title: "Estudiante",
     icon: UserRound,
-    color: "text-sky-700",
-    border: "border-sky-200",
-    background: "bg-sky-50/70",
-    summary:
-      "Es un usuario de consulta. Explora el repositorio, revisa detalles y guarda publicaciones favoritas.",
+    accentBg: "bg-sky-50",
+    accentBorder: "border-sky-200",
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    badgeClass: "bg-sky-100 text-sky-700",
+    summary: "Usuario de consulta. Explora el repositorio, revisa detalles y guarda publicaciones favoritas.",
     can: [
       "Explorar publicaciones disponibles.",
       "Ver el detalle de cada recurso publicado.",
@@ -68,56 +79,59 @@ const roles = [
     ],
     cannot: [
       "No puede crear publicaciones.",
-      "No puede editar, eliminar ni enviar publicaciones a evaluacion.",
+      "No puede editar, eliminar ni enviar a evaluación.",
       "No puede aprobar, rechazar ni devolver publicaciones.",
     ],
   },
   {
     title: "Docente",
     icon: GraduationCap,
-    color: "text-amber-700",
-    border: "border-amber-200",
-    background: "bg-amber-50/70",
-    summary:
-      "Es el autor operativo del recurso y el responsable de prepararlo antes de la evaluacion formal.",
+    accentBg: "bg-amber-50",
+    accentBorder: "border-amber-200",
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    badgeClass: "bg-amber-100 text-amber-700",
+    summary: "Autor operativo del recurso y responsable de prepararlo antes de la evaluación formal.",
     can: [
       "Crear o subir publicaciones.",
       "Editar sus publicaciones en estados permitidos.",
-      "Enviar sus publicaciones a evaluacion.",
+      "Enviar sus publicaciones a evaluación.",
     ],
     cannot: [
-      "No puede evaluar academicamente.",
+      "No puede evaluar académicamente.",
       "No puede aprobar, rechazar ni devolver con observaciones.",
-      "No puede administrar usuarios ni configuracion general.",
+      "No puede administrar usuarios ni configuración general.",
     ],
   },
   {
     title: "Evaluador",
     icon: Shield,
-    color: "text-violet-700",
-    border: "border-violet-200",
-    background: "bg-violet-50/70",
-    summary:
-      "Conduce la evaluacion academica formal desde una sola pantalla.",
+    accentBg: "bg-violet-50",
+    accentBorder: "border-violet-200",
+    iconBg: "bg-violet-100",
+    iconColor: "text-violet-600",
+    badgeClass: "bg-violet-100 text-violet-700",
+    summary: "Conduce la evaluación académica formal desde una sola pantalla.",
     can: [
-      "Ver publicaciones enviadas a evaluacion.",
-      "Diligenciar la rubrica completa con puntajes, fortalezas, mejoras y observaciones.",
+      "Ver publicaciones enviadas a evaluación.",
+      "Diligenciar la rúbrica completa con puntajes y observaciones.",
       "Aprobar, rechazar o devolver con observaciones.",
     ],
     cannot: [
       "No puede crear publicaciones por el docente.",
-      "No puede publicar al sitio publico final.",
+      "No puede publicar al sitio público final.",
       "No puede administrar usuarios ni roles.",
     ],
   },
   {
     title: "Administrador",
     icon: BadgeCheck,
-    color: "text-emerald-700",
-    border: "border-emerald-200",
-    background: "bg-emerald-50/70",
-    summary:
-      "Tiene control total y conserva la publicacion final publica.",
+    accentBg: "bg-emerald-50",
+    accentBorder: "border-emerald-200",
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    badgeClass: "bg-emerald-100 text-emerald-700",
+    summary: "Tiene control total y conserva la publicación final pública.",
     can: [
       "Gestionar usuarios y roles.",
       "Intervenir en publicaciones y estados.",
@@ -125,337 +139,341 @@ const roles = [
     ],
     cannot: [
       "No tiene restricciones operativas dentro del sistema.",
-      "Debe mantener trazabilidad institucional en cada override.",
+      "Debe mantener trazabilidad institucional en cada intervención.",
     ],
   },
 ];
 
-const states = [
-  "borrador",
-  "enviada",
-  "en_evaluacion",
-  "ajustes_solicitados",
-  "aprobada",
-  "rechazada",
-  "publicada",
-  "suspendida",
+const states: { key: string; label: string; color: string; dot: string }[] = [
+  { key: "borrador",              label: "Borrador",               color: "bg-stone-100 text-stone-600 border-stone-200",    dot: "bg-stone-400" },
+  { key: "enviada",               label: "Enviada",                color: "bg-blue-50  text-blue-600  border-blue-200",     dot: "bg-blue-500" },
+  { key: "en_evaluacion",         label: "En evaluación",          color: "bg-violet-50 text-violet-600 border-violet-200", dot: "bg-violet-500" },
+  { key: "ajustes_solicitados",   label: "Ajustes solicitados",    color: "bg-orange-50 text-orange-600 border-orange-200", dot: "bg-orange-500" },
+  { key: "aprobada",              label: "Aprobada",               color: "bg-lime-50   text-lime-700   border-lime-200",   dot: "bg-lime-500" },
+  { key: "rechazada",             label: "Rechazada",              color: "bg-red-50    text-red-600    border-red-200",    dot: "bg-red-500" },
+  { key: "publicada",             label: "Publicada",              color: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
+  { key: "suspendida",            label: "Suspendida",             color: "bg-zinc-100  text-zinc-500   border-zinc-200",  dot: "bg-zinc-400" },
 ];
 
 const faq = [
   {
-    question: "Necesito iniciar sesion para explorar publicaciones?",
-    answer:
-      "No. La consulta publica sigue disponible sin autenticacion. El inicio de sesion solo es necesario para guardar favoritos o actuar dentro del flujo.",
+    question: "¿Necesito iniciar sesión para explorar publicaciones?",
+    answer: "No. La consulta pública sigue disponible sin autenticación. El inicio de sesión solo es necesario para guardar favoritos o actuar dentro del flujo.",
   },
   {
-    question: "Quien puede crear publicaciones?",
-    answer:
-      "El docente es el autor operativo del flujo y el administrador conserva capacidad de respaldo general.",
+    question: "¿Quién puede crear publicaciones?",
+    answer: "El docente es el autor operativo del flujo. El administrador conserva capacidad de respaldo general.",
   },
   {
-    question: "Quien toma la decision academica?",
-    answer:
-      "El evaluador. Debe registrar la evaluacion completa antes de aprobar, rechazar o devolver con observaciones.",
+    question: "¿Quién toma la decisión académica?",
+    answer: "El evaluador. Debe registrar la evaluación completa antes de aprobar, rechazar o devolver con observaciones.",
   },
   {
-    question: "Quien publica el recurso al repositorio publico?",
-    answer:
-      "El administrador mantiene la publicacion final de los recursos aprobados.",
+    question: "¿Quién publica el recurso al repositorio público?",
+    answer: "El administrador mantiene la publicación final de los recursos aprobados.",
   },
 ];
 
-function SectionHeading({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
+/* ─── Subcomponentes ─────────────────────────────────────────────── */
+
+function SectionHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
     <div className="max-w-3xl">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-primary/80">
-        {eyebrow}
-      </p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-        {title}
-      </h2>
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary/80">{eyebrow}</p>
+      <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h2>
       <p className="mt-3 text-base leading-7 text-muted-foreground">{description}</p>
     </div>
   );
 }
 
-function RoleSection({
-  title,
-  icon: Icon,
-  color,
-  border,
-  background,
-  summary,
-  can,
-  cannot,
-}: {
-  title: string;
-  icon: typeof UserRound;
-  color: string;
-  border: string;
-  background: string;
-  summary: string;
-  can: string[];
-  cannot: string[];
-}) {
+function RoleCard({
+  title, icon: Icon, accentBg, accentBorder, iconBg, iconColor, badgeClass, summary, can, cannot,
+}: (typeof roles)[number]) {
   return (
-    <section className={`rounded-3xl border ${border} ${background} p-6 shadow-sm`}>
-      <div className="flex items-start gap-4">
-        <div className={`rounded-2xl bg-background p-3 shadow-sm ${color}`}>
-          <Icon className="h-5 w-5" />
+    <div className={`overflow-hidden rounded-3xl border ${accentBorder} ${accentBg} shadow-sm`}>
+      {/* Encabezado */}
+      <div className="flex items-center gap-4 px-6 pt-6 pb-4">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${iconBg}`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} />
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{summary}</p>
+        <div>
+          <div className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${badgeClass}`}>
+            {title}
+          </div>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">{summary}</p>
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-foreground/80">
+      {/* Columnas puede / no puede */}
+      <div className="grid gap-0 divide-y divide-border/40 bg-background/60 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+        <div className="px-6 py-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
             Puede hacer
           </p>
-          <ul className="mt-3 space-y-3 text-sm leading-6 text-foreground/90">
+          <ul className="space-y-2.5">
             {can.map((item) => (
-              <li key={item} className="flex gap-3">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                <span>{item}</span>
+              <li key={item} className="flex items-start gap-2.5 text-sm text-foreground/80">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                {item}
               </li>
             ))}
           </ul>
         </div>
-
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-foreground/80">
+        <div className="px-6 py-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">
             No puede hacer
           </p>
-          <ul className="mt-3 space-y-3 text-sm leading-6 text-foreground/90">
+          <ul className="space-y-2.5">
             {cannot.map((item) => (
-              <li key={item} className="flex gap-3">
-                <CircleX className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
-                <span>{item}</span>
+              <li key={item} className="flex items-start gap-2.5 text-sm text-foreground/80">
+                <CircleX className="mt-0.5 h-4 w-4 shrink-0 text-rose-400" />
+                {item}
               </li>
             ))}
           </ul>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
+
+/* ─── Página ─────────────────────────────────────────────────────── */
 
 export default function Page() {
   return (
     <div className="relative overflow-hidden bg-background">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(11,95,255,0.08),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(245,158,11,0.08),_transparent_30%)]" />
+      {/* Fondo decorativo */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_top_left,_rgba(99,102,241,0.06),_transparent),radial-gradient(ellipse_60%_40%_at_bottom_right,_rgba(245,158,11,0.07),_transparent)]" />
 
       <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
-          <main>
-            <div className="mb-8 flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary">
-                <Sparkles className="h-3.5 w-3.5" />
-                Guia institucional
-              </Badge>
-              <Badge variant="outline" className="gap-1">
-                <BookOpen className="h-3.5 w-3.5" />
-                Como funciona
-              </Badge>
-            </div>
+        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_268px]">
 
-            <div className="max-w-4xl">
+          {/* ══════════════════════════════════════
+              MAIN
+          ══════════════════════════════════════ */}
+          <main className="min-w-0">
+
+            {/* Hero */}
+            <div className="mb-12">
+              <div className="mb-5 flex flex-wrap items-center gap-2">
+                <Badge variant="secondary" className="gap-1.5 bg-primary/10 text-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Guía institucional
+                </Badge>
+                <Badge variant="outline" className="gap-1.5">
+                  <BookOpen className="h-3.5 w-3.5" />
+                  Cómo funciona
+                </Badge>
+              </div>
+
               <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Guia de funcionamiento y roles
+                Guía de funcionamiento y roles
               </h1>
-              <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">
-                El repositorio combina consulta publica, favoritos, gestion
-                docente del recurso, evaluacion formal y control administrativo
-                final.
+              <p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">
+                El repositorio combina consulta pública, favoritos, gestión docente del recurso,
+                evaluación formal y control administrativo final.
               </p>
+
             </div>
 
-            <section id="vision" className="mt-16 scroll-mt-24">
+            {/* ── Visión general ── */}
+            <section id="vision" className="scroll-mt-24">
               <SectionHeading
-                eyebrow="Vision general"
-                title="Consulta publica con control academico real"
-                description="La exploracion publica se mantiene simple, mientras que la gestion interna separa con claridad quien crea, quien evalua y quien publica."
+                eyebrow="Visión general"
+                title="Consulta pública con control académico real"
+                description="La exploración pública se mantiene simple, mientras que la gestión interna separa con claridad quién crea, quién evalúa y quién publica."
               />
 
-              <div className="mt-6 rounded-3xl border border-border/70 bg-card/80 p-7 shadow-sm">
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <div className="space-y-4 text-sm leading-7 text-muted-foreground">
-                    <p>
-                      Los recursos visibles al publico son los que ya completaron la
-                      evaluacion y fueron publicados por administracion.
-                    </p>
-                    <p>
-                      El estudiante queda orientado a consulta, detalle y
-                      favoritos, sin intervenir en la creacion o envio del recurso.
-                    </p>
+              <div className="mt-6 grid gap-4 rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm sm:grid-cols-2">
+                {[
+                  "Los recursos visibles al público son los que ya completaron la evaluación y fueron publicados por administración.",
+                  "El estudiante queda orientado a consulta, detalle y favoritos, sin intervenir en la creación o envío del recurso.",
+                  "El docente es el autor operativo del proceso y el evaluador registra la decisión académica desde una única pantalla.",
+                  "Los usuarios autenticados pueden construir una lista de favoritos para volver rápido a publicaciones de interés.",
+                ].map((text) => (
+                  <div key={text} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
+                    <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-primary/60" />
+                    <p>{text}</p>
                   </div>
-                  <div className="space-y-4 text-sm leading-7 text-muted-foreground">
-                    <p>
-                      El docente es el autor operativo del proceso y el evaluador
-                      registra la decision academica desde una unica pantalla.
-                    </p>
-                    <p>
-                      Ademas, los usuarios autenticados pueden construir una lista de
-                      favoritos para volver rapido a publicaciones de interes.
-                    </p>
-                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* ── Flujo académico — Timeline ── */}
+            <section id="flujo" className="mt-16 scroll-mt-24">
+              <SectionHeading
+                eyebrow="Flujo académico"
+                title="Cómo avanza un recurso hasta quedar publicado"
+                description="El sistema evita atajos manuales y obliga a que la evaluación quede completa antes de cualquier decisión."
+              />
+
+              <div className="relative mt-8">
+                {/* Línea vertical del timeline */}
+                <div className="absolute left-5 top-0 bottom-0 w-px bg-border/60 sm:left-6" />
+
+                <div className="space-y-6">
+                  {flowSteps.map((step) => (
+                    <div key={step.title} className="relative flex items-start gap-5 sm:gap-6">
+                      {/* Número / nodo */}
+                      <div className="relative z-10 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-border/60 bg-background font-bold text-sm text-primary shadow-sm">
+                        {step.icon}
+                      </div>
+
+                      {/* Contenido */}
+                      <div className="flex-1 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-sm">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <h3 className="text-base font-semibold text-foreground">{step.title}</h3>
+                          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${step.actorColor}`}>
+                            {step.actor}
+                          </span>
+                        </div>
+                        <p className="text-sm leading-6 text-muted-foreground">{step.text}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </section>
 
-            <section id="flujo" className="mt-16 scroll-mt-24">
-              <SectionHeading
-                eyebrow="Flujo academico"
-                title="Como avanza un recurso hasta quedar publicado"
-                description="El sistema evita atajos manuales y obliga a que la evaluacion quede completa antes de cualquier decision."
-              />
-
-              <div className="mt-6 space-y-4">
-                {flowSteps.map((step, index) => (
-                  <div
-                    key={step.title}
-                    className="rounded-2xl border border-border/70 bg-background/80 p-5 shadow-sm"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {step.title}
-                        </h3>
-                        <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                          {step.text}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
+            {/* ── Roles ── */}
             <section id="roles" className="mt-16 scroll-mt-24">
               <SectionHeading
                 eyebrow="Roles"
-                title="Que hace cada perfil"
+                title="Qué hace cada perfil"
                 description="El flujo oficial queda compuesto por estudiante, docente, evaluador y administrador."
               />
 
-              <div className="mt-6 space-y-6">
+              <div className="mt-6 space-y-5">
                 {roles.map((role) => (
-                  <RoleSection key={role.title} {...role} />
+                  <RoleCard key={role.title} {...role} />
                 ))}
               </div>
             </section>
 
+            {/* ── Estados ── */}
             <section id="estados" className="mt-16 scroll-mt-24">
               <SectionHeading
                 eyebrow="Estados"
                 title="Estados soportados por el workflow"
-                description="Estos estados se reflejan en la interfaz y en la bitacora historica de cada publicacion."
+                description="Estos estados se reflejan en la interfaz y en la bitácora histórica de cada publicación."
               />
 
-              <div className="mt-6 rounded-3xl border border-border/70 bg-card/80 p-7 shadow-sm">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {states.map((state) => (
+              <div className="mt-6 rounded-3xl border border-border/60 bg-card/80 p-6 shadow-sm">
+                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+                  {states.map(({ key, label, color, dot }) => (
                     <div
-                      key={state}
-                      className="flex items-center gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-sm text-foreground"
+                      key={key}
+                      className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-medium ${color}`}
                     >
-                      <Workflow className="h-4 w-4 text-primary" />
-                      <span>{state}</span>
+                      <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+                      {label}
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-6 rounded-2xl border border-border/70 bg-muted/40 p-4 text-sm leading-7 text-muted-foreground">
-                  <p className="font-semibold text-foreground">Regla clave</p>
-                  <p className="mt-2">
-                    La evaluacion formal no equivale a publicacion publica. Un recurso
-                    aprobado todavia requiere la accion final de administracion para
-                    pasar a <strong>publicada</strong>.
+                <div className="mt-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-sm text-amber-800">
+                  <Workflow className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <p>
+                    <span className="font-semibold">Regla clave:</span> La evaluación formal no equivale
+                    a publicación pública. Un recurso aprobado todavía requiere la acción final de
+                    administración para pasar a <strong>publicada</strong>.
                   </p>
                 </div>
               </div>
             </section>
 
+            {/* ── FAQ ── */}
             <section id="faq" className="mt-16 scroll-mt-24">
               <SectionHeading
                 eyebrow="Preguntas frecuentes"
                 title="Dudas comunes"
-                description="Estas respuestas resumen la logica operativa actual del repositorio."
+                description="Estas respuestas resumen la lógica operativa actual del repositorio."
               />
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-3">
                 {faq.map((item) => (
                   <details
                     key={item.question}
-                    className="group rounded-2xl border border-border/70 bg-background/80 p-5 shadow-sm"
+                    className="group rounded-2xl border border-border/60 bg-background/90 shadow-sm open:border-primary/20 open:bg-primary/[0.02]"
                   >
-                    <summary className="flex cursor-pointer list-none items-center gap-3 text-base font-semibold text-foreground">
-                      <CircleHelp className="h-5 w-5 shrink-0 text-primary" />
-                      <span>{item.question}</span>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <CircleHelp className="h-5 w-5 shrink-0 text-primary/70" />
+                        <span className="text-sm font-semibold text-foreground">{item.question}</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-90" />
                     </summary>
-                    <p className="mt-4 pl-8 text-sm leading-7 text-muted-foreground">
-                      {item.answer}
-                    </p>
+                    <div className="px-5 pb-4 pt-0">
+                      <div className="ml-8 border-l-2 border-primary/20 pl-4">
+                        <p className="text-sm leading-7 text-muted-foreground">{item.answer}</p>
+                      </div>
+                    </div>
                   </details>
                 ))}
               </div>
             </section>
           </main>
 
+          {/* ══════════════════════════════════════
+              SIDEBAR
+          ══════════════════════════════════════ */}
           <aside className="lg:sticky lg:top-24 lg:h-fit">
-            <div className="rounded-3xl border border-border/70 bg-card/90 p-6 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-                  <FileText className="h-5 w-5" />
+            <div className="rounded-3xl border border-border/60 bg-card/90 p-5 shadow-sm">
+              {/* Navegación */}
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
+                  <FileText className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Indice
-                  </p>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Navegacion rapida
-                  </h2>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Índice</p>
+                  <p className="text-sm font-semibold text-foreground leading-tight">Navegación rápida</p>
                 </div>
               </div>
 
-              <nav className="mt-6 space-y-2">
-                {sections.map((section) => (
+              <nav className="space-y-1">
+                {sections.map((section, i) => (
                   <a
                     key={section.id}
                     href={`#${section.id}`}
-                    className="flex items-center justify-between rounded-2xl border border-transparent px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-border hover:bg-muted/50 hover:text-foreground"
+                    className="group flex items-center justify-between rounded-xl border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:border-border/60 hover:bg-muted/50 hover:text-foreground"
                   >
-                    <span>{section.label}</span>
-                    <span className="text-xs text-muted-foreground/70">-&gt;</span>
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-muted text-[10px] font-bold text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary">
+                        {i + 1}
+                      </span>
+                      {section.label}
+                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                   </a>
                 ))}
               </nav>
 
-              <div className="mt-6 rounded-2xl border border-border/70 bg-muted/30 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                  <FileHeart className="h-4 w-4 text-rose-600" />
-                  Favoritos persistentes
-                </div>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Los usuarios autenticados pueden guardar publicaciones y
-                  encontrarlas luego desde el corazon del encabezado.
+              {/* Mini resumen de roles */}
+              <div className="mt-4 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Roles del sistema
                 </p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Estudiante", color: "bg-sky-500" },
+                    { label: "Docente", color: "bg-amber-500" },
+                    { label: "Evaluador", color: "bg-violet-500" },
+                    { label: "Administrador", color: "bg-emerald-500" },
+                  ].map(({ label, color }) => (
+                    <a
+                      key={label}
+                      href="#roles"
+                      className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      <span className={`h-2 w-2 rounded-full ${color}`} />
+                      {label}
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </aside>
+
         </div>
       </div>
     </div>

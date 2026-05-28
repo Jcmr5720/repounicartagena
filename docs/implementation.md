@@ -28,8 +28,15 @@ modelo oficial del proyecto:
 
 - `components/publication-management-page.tsx` mantiene una sola pantalla de
   evaluacion formal.
+- La misma pantalla ahora separa claramente `Ver publicacion completa` de
+  `Evaluar`, para evitar decisiones sin inspeccion previa del recurso.
+- `components/publication-detail-modal.tsx` y
+  `components/publication-detail-content.tsx` reutilizan el detalle completo
+  dentro del flujo de gestion.
 - El evaluador diligencia rubrica, puntajes, concepto, fortalezas, mejoras y
   observaciones en el mismo lugar.
+- `evaluador` ve ademas `Historico de mis evaluaciones` con la ultima decision
+  registrada por publicacion.
 - La decision no implica publicacion final automatica; `admin` conserva ese paso.
 
 ### Moderacion
@@ -44,6 +51,8 @@ modelo oficial del proyecto:
   quitar favoritos.
 - El boton se reutiliza en tarjetas, listados y detalle.
 - El estado cambia en caliente usando `lib/publications-context.tsx`.
+- `components/header.tsx` muestra un badge numerico sobre el corazon con la
+  cantidad real de favoritos, tambien visible en movil.
 
 ## Supabase
 
@@ -99,5 +108,8 @@ Se bloquea:
 - `components/header.tsx`
 - `components/upload-page.tsx`
 - `components/publication-management-page.tsx`
+- `components/publication-detail-modal.tsx`
+- `components/publication-detail-content.tsx`
 - `components/publication-favorite-button.tsx`
+- `supabase/migrations/20260527000500_cartagena_publication_owner_summaries.sql`
 - `supabase/migrations/20260527000400_cartagena_docente_workflow_favorites.sql`

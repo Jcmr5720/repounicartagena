@@ -80,6 +80,7 @@ export function Header() {
         .slice(0, 6),
     [favorites, publications],
   );
+  const favoriteCount = favorites.length;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -129,13 +130,23 @@ export function Header() {
                 {canUseFavorites(user) ? (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon-sm" aria-label="Favoritos">
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        aria-label="Favoritos"
+                        className="relative"
+                      >
                         <Heart className="h-4 w-4" />
+                        {favoriteCount > 0 ? (
+                          <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                            {favoriteCount}
+                          </span>
+                        ) : null}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-80">
                       <DropdownMenuLabel className="space-y-1 px-2 py-1.5">
-                        <div className="text-sm font-medium text-foreground">
+                      <div className="text-sm font-medium text-foreground">
                           Favoritos
                         </div>
                         <div className="text-xs font-normal text-muted-foreground">
@@ -266,8 +277,13 @@ export function Header() {
                 </div>
                 {canUseFavorites(user) ? (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                      Favoritos
+                    <p className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      <span>Favoritos</span>
+                      {favoriteCount > 0 ? (
+                        <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+                          {favoriteCount}
+                        </span>
+                      ) : null}
                     </p>
                     {favoritePublications.length > 0 ? (
                       favoritePublications.map((publication) => (
