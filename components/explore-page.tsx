@@ -28,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PublicationFavoriteButton } from "@/components/publication-favorite-button";
 
 interface ExplorePageProps {
   initialSearch?: string;
@@ -363,17 +364,20 @@ function ExploreContent({
                         year: "numeric",
                       })}
                     </div>
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="gap-1 text-primary hover:text-primary"
-                    >
-                      <Link href={`/publicaciones/${publication.id}`}>
-                        Ver detalle
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <PublicationFavoriteButton publicationId={publication.id} />
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-primary hover:text-primary"
+                      >
+                        <Link href={`/publicaciones/${publication.id}`}>
+                          Ver detalle
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

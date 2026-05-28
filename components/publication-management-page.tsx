@@ -14,7 +14,6 @@ import { useAuth } from "@/lib/auth-context";
 import {
   canAccessEvaluation,
   canPublishPublication,
-  canStartEvaluation,
   canSuspendPublication,
   isAdmin,
 } from "@/lib/permissions";
@@ -57,7 +56,7 @@ export function PublicationManagementPage() {
     return publications.filter((publication) => {
       const inQueue =
         [
-          "enviada_a_evaluacion",
+          "enviada",
           "en_evaluacion",
           "aprobada",
           "rechazada",
@@ -79,7 +78,7 @@ export function PublicationManagementPage() {
   const counts = useMemo(
     () => ({
       pending: publications.filter(
-        (publication) => publication.workflow_status === "enviada_a_evaluacion",
+        (publication) => publication.workflow_status === "enviada",
       ).length,
       inProgress: publications.filter(
         (publication) => publication.workflow_status === "en_evaluacion",
@@ -165,6 +164,16 @@ export function PublicationManagementPage() {
     return true;
   };
 
+  const ensureEvaluationStarted = async (publicationId: string) => {
+    const publication = publications.find((item) => item.id === publicationId);
+
+    if (!publication || publication.workflow_status !== "enviada") {
+      return { success: true };
+    }
+
+    return applyWorkflowAction(publicationId, "start_evaluation");
+  };
+
   const handleConfirmAction = async () => {
     if (!selectedPublication || !selectedAction) {
       return;
@@ -185,13 +194,26 @@ export function PublicationManagementPage() {
     setIsSubmittingAction(false);
   };
 
-  const handleSaveEvaluation = async (input: PublicationEvaluationInput) =>
-    savePublicationEvaluation(input);
+  const handleSaveEvaluation = async (input: PublicationEvaluationInput) => {
+    const startResult = await ensureEvaluationStarted(input.publication_id);
+
+    if (!startResult.success) {
+      return startResult;
+    }
+
+    return savePublicationEvaluation(input);
+  };
 
   const handleEvaluationDecision = async (
     input: PublicationEvaluationInput,
     action: EvaluationDecision,
   ) => {
+    const startResult = await ensureEvaluationStarted(input.publication_id);
+
+    if (!startResult.success) {
+      return startResult;
+    }
+
     const saveResult = await savePublicationEvaluation({
       ...input,
       decision: action,
@@ -272,14 +294,15 @@ export function PublicationManagementPage() {
               Gestion de publicaciones
             </h1>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
-              Aqui se concentra la evaluacion formal, las decisiones academicas y la
-              publicacion final del recurso.
+              Aqui se concentra la evaluacion formal, la evidencia academica y la
+              decision del evaluador. La publicacion final sigue bajo control
+              administrativo.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
-              <Link href={isAdmin(user) ? "/admin" : "/moderacion"}>
+              <Link href={isAdmin(user) ? "/admin" : "/explorar"}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Volver
               </Link>
@@ -302,7 +325,7 @@ export function PublicationManagementPage() {
         <div className="mb-8 grid gap-4 md:grid-cols-4">
           <Card className="border-border/70 shadow-sm">
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Pendientes</p>
+              <p className="text-sm text-muted-foreground">Enviadas</p>
               <p className="text-3xl font-semibold text-foreground">{counts.pending}</p>
             </CardContent>
           </Card>
@@ -420,19 +443,6 @@ export function PublicationManagementPage() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        {canStartEvaluation(user, publication) ? (
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              void handleWorkflowAction(
-                                publication.id,
-                                "start_evaluation",
-                              )
-                            }
-                          >
-                            Iniciar evaluacion
-                          </Button>
-                        ) : null}
                         {canPublishPublication(user, publication) ? (
                           <Button
                             onClick={() => openActionDialog(publication, "publish")}
@@ -451,7 +461,7 @@ export function PublicationManagementPage() {
                       </div>
                     </div>
 
-                    {publication.workflow_status === "en_evaluacion" ? (
+                    {["enviada", "en_evaluacion"].includes(publication.workflow_status) ? (
                       <div className="mt-6">
                         <EvaluationForm
                           publicationId={publication.id}

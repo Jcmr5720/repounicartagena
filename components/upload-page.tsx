@@ -149,7 +149,7 @@ export function UploadPage() {
               Acceso requerido
             </h2>
             <p className="mb-6 text-muted-foreground">
-              Debes iniciar sesion para subir y administrar documentos.
+              Debes iniciar sesion para gestionar publicaciones docentes.
             </p>
             <Button asChild>
               <Link href="/auth">Iniciar sesion</Link>
@@ -169,10 +169,10 @@ export function UploadPage() {
               <ShieldAlert className="h-8 w-8 text-amber-600" />
             </div>
             <h2 className="mb-2 text-xl font-semibold text-foreground">
-              No tienes permisos para subir documentos
+              No tienes permisos para gestionar publicaciones
             </h2>
             <p className="text-muted-foreground">
-              Este espacio esta reservado para estudiantes y administradores.
+              Este espacio esta reservado para docentes y administradores.
             </p>
           </CardContent>
         </Card>
@@ -268,7 +268,7 @@ export function UploadPage() {
 
           if (!transitionResult.success) {
             throw new Error(
-              transitionResult.error || "No se pudo enviar la publicacion a revision",
+              transitionResult.error || "No se pudo enviar la publicacion a evaluacion",
             );
           }
         }
@@ -276,7 +276,7 @@ export function UploadPage() {
         setSubmitStatus("success");
         setMessage(
           submitMode === "review"
-            ? "Documento actualizado y enviado a revision."
+            ? "Documento actualizado y enviado a evaluacion."
             : "Documento actualizado correctamente.",
         );
       } else {
@@ -308,7 +308,7 @@ export function UploadPage() {
 
           if (!transitionResult.success) {
             throw new Error(
-              transitionResult.error || "No se pudo enviar la publicacion a revision",
+              transitionResult.error || "No se pudo enviar la publicacion a evaluacion",
             );
           }
         }
@@ -316,7 +316,7 @@ export function UploadPage() {
         setSubmitStatus("success");
         setMessage(
           submitMode === "review"
-            ? "Documento creado y enviado a revision."
+            ? "Documento creado y enviado a evaluacion."
             : "Documento guardado como borrador.",
         );
       }
@@ -371,12 +371,12 @@ export function UploadPage() {
     const result = await applyWorkflowAction(publication.id, "submit_for_review");
     if (!result.success) {
       setSubmitStatus("error");
-      setMessage(result.error || "No se pudo enviar la publicacion a revision");
+      setMessage(result.error || "No se pudo enviar la publicacion a evaluacion");
       return;
     }
 
     setSubmitStatus("success");
-    setMessage("La publicacion fue enviada a revision docente.");
+    setMessage("La publicacion fue enviada a evaluacion.");
   };
 
   return (
@@ -384,12 +384,12 @@ export function UploadPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            {editingPublication ? "Editar publicacion" : "Subir documento"}
+            {editingPublication ? "Editar publicacion" : "Gestionar publicacion"}
           </h1>
           <p className="mt-2 text-muted-foreground">
             {editingPublication
-              ? "Actualiza el recurso y decide si quieres mantenerlo en trabajo o enviarlo a revision."
-              : "Guarda tu trabajo como borrador o envialo directamente a revision docente."}
+              ? "Actualiza el recurso y decide si quieres mantenerlo en borrador o enviarlo a evaluacion."
+              : "Carga el recurso, guarda avances y envialo a evaluacion cuando este listo."}
           </p>
         </div>
         {editingPublication ? (
@@ -417,7 +417,7 @@ export function UploadPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-primary" />
-            Informacion del recurso digital
+            Gestion docente del recurso digital
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -631,7 +631,7 @@ export function UploadPage() {
               >
                 {isSubmitting && submitMode === "review"
                   ? "Enviando..."
-                  : "Guardar y enviar a revision"}
+                  : "Guardar y enviar a evaluacion"}
               </Button>
             </div>
           </form>
@@ -733,7 +733,7 @@ export function UploadPage() {
                             size="sm"
                             onClick={() => void handleSendToReview(publication)}
                           >
-                            Enviar a revision
+                            Enviar a evaluacion
                           </Button>
                         ) : null}
                         {canEditDocument(user, publication) ? (

@@ -17,6 +17,7 @@ import { useSupabase } from "@/lib/supabase/provider";
 import type {
   AcademicProgram,
   EvaluationCriteriaScores,
+  PublicationFavorite,
   Publication,
   PublicationEvaluationInput,
   PublicationEvaluation,
@@ -32,6 +33,7 @@ interface PublicationsContextType {
   workflowEvents: PublicationWorkflowEvent[];
   reviews: PublicationReview[];
   evaluations: PublicationEvaluation[];
+  favorites: PublicationFavorite[];
   isLoading: boolean;
   addPublication: (
     publication: {
@@ -73,6 +75,10 @@ interface PublicationsContextType {
   getLatestEvaluationForPublication: (
     publicationId: string,
   ) => PublicationEvaluation | undefined;
+  isFavorite: (publicationId: string) => boolean;
+  toggleFavorite: (
+    publicationId: string,
+  ) => Promise<{ success: boolean; error?: string }>;
   searchPublications: (query: string) => Publication[];
   refreshPublications: () => Promise<void>;
 }
@@ -87,6 +93,7 @@ const PROGRAMS_TABLE = "cartagena_producto_programa";
 const REVIEWS_TABLE = "cartagena_publication_reviews";
 const EVALUATIONS_TABLE = "cartagena_publication_evaluations";
 const WORKFLOW_EVENTS_TABLE = "cartagena_publication_workflow_events";
+const FAVORITES_TABLE = "cartagena_publication_favorites";
 const PUBLICATIONS_STORAGE_KEY = "reds_colombia_publications";
 const LEGACY_PUBLICATIONS_STORAGE_KEY = ["repo", "sitorio_publications"].join(
   "",
@@ -163,6 +170,13 @@ type SupabaseEvaluationRow = {
   evaluated_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+type SupabaseFavoriteRow = {
+  id: string;
+  user_id: string;
+  publication_id: string;
+  created_at: string;
 };
 
 type LegacyPublication = {
@@ -272,6 +286,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   );
   const [reviews, setReviews] = useState<PublicationReview[]>([]);
   const [evaluations, setEvaluations] = useState<PublicationEvaluation[]>([]);
+  const [favorites, setFavorites] = useState<PublicationFavorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const programasRef = useRef<AcademicProgram[]>([]);
 
@@ -399,6 +414,26 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     [supabase, user],
   );
 
+  const loadFavorites = useCallback(async () => {
+    if (!supabase || !user) {
+      setFavorites([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from(FAVORITES_TABLE)
+      .select("id,user_id,publication_id,created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error loading favorites", error);
+      setFavorites([]);
+      return;
+    }
+
+    setFavorites((data ?? []) as SupabaseFavoriteRow[]);
+  }, [supabase, user]);
+
   const loadPublications = useCallback(async () => {
     if (!supabase) {
       setPublications([]);
@@ -406,6 +441,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       setWorkflowEvents([]);
       setReviews([]);
       setEvaluations([]);
+      setFavorites([]);
       setIsLoading(false);
       return;
     }
@@ -431,6 +467,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       setWorkflowEvents([]);
       setReviews([]);
       setEvaluations([]);
+      setFavorites([]);
       setIsLoading(false);
       return;
     }
@@ -504,8 +541,16 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
     setPublications(documentsWithUrls);
     await loadWorkflowArtifacts(documentsWithUrls.map((publication) => publication.id));
+    await loadFavorites();
     setIsLoading(false);
-  }, [loadPrograms, loadWorkflowArtifacts, resolveProgramId, supabase, user]);
+  }, [
+    loadFavorites,
+    loadPrograms,
+    loadWorkflowArtifacts,
+    resolveProgramId,
+    supabase,
+    user,
+  ]);
 
   useEffect(() => {
     if (authLoading) {
@@ -547,7 +592,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (!accessToken) {
         return {
           success: false,
-          error: "Debes iniciar sesion para subir documentos",
+          error: "Debes iniciar sesion para gestionar publicaciones",
         };
       }
 
@@ -789,6 +834,81 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     [evaluations],
   );
 
+  const isFavorite = useCallback(
+    (publicationId: string) =>
+      favorites.some((favorite) => favorite.publication_id === publicationId),
+    [favorites],
+  );
+
+  const toggleFavorite = useCallback(
+    async (publicationId: string) => {
+      if (!supabase || !user) {
+        return {
+          success: false,
+          error: "Debes iniciar sesion para guardar favoritos",
+        };
+      }
+
+      const existingFavorite = favorites.find(
+        (favorite) => favorite.publication_id === publicationId,
+      );
+
+      if (existingFavorite) {
+        const previousFavorites = favorites;
+        setFavorites((current) =>
+          current.filter((favorite) => favorite.id !== existingFavorite.id),
+        );
+
+        const { error } = await supabase
+          .from(FAVORITES_TABLE)
+          .delete()
+          .eq("id", existingFavorite.id);
+
+        if (error) {
+          setFavorites(previousFavorites);
+          return { success: false, error: error.message };
+        }
+
+        return { success: true };
+      }
+
+      const optimisticFavorite: PublicationFavorite = {
+        id: `temp-${publicationId}`,
+        user_id: user.id,
+        publication_id: publicationId,
+        created_at: new Date().toISOString(),
+      };
+
+      setFavorites((current) => [optimisticFavorite, ...current]);
+
+      const { data, error } = await supabase
+        .from(FAVORITES_TABLE)
+        .insert({
+          user_id: user.id,
+          publication_id: publicationId,
+        })
+        .select("id,user_id,publication_id,created_at")
+        .maybeSingle();
+
+      if (error) {
+        setFavorites((current) =>
+          current.filter((favorite) => favorite.id !== optimisticFavorite.id),
+        );
+        return { success: false, error: error.message };
+      }
+
+      if (data) {
+        setFavorites((current) => [
+          data as SupabaseFavoriteRow,
+          ...current.filter((favorite) => favorite.id !== optimisticFavorite.id),
+        ]);
+      }
+
+      return { success: true };
+    },
+    [favorites, supabase, user],
+  );
+
   const searchPublications = useCallback(
     (query: string) => {
       const lowerQuery = normalizeQuery(query);
@@ -819,6 +939,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       workflowEvents,
       reviews,
       evaluations,
+      favorites,
       isLoading,
       addPublication,
       updatePublication,
@@ -829,6 +950,8 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       getWorkflowEventsForPublication,
       getLatestWorkflowCommentForPublication,
       getLatestEvaluationForPublication,
+      isFavorite,
+      toggleFavorite,
       searchPublications,
       refreshPublications,
     }),
@@ -841,13 +964,16 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       getLatestWorkflowCommentForPublication,
       getPublicationById,
       getWorkflowEventsForPublication,
+      favorites,
       isLoading,
+      isFavorite,
       programas,
       publications,
       refreshPublications,
       reviews,
       savePublicationEvaluation,
       searchPublications,
+      toggleFavorite,
       updatePublication,
       workflowEvents,
     ],

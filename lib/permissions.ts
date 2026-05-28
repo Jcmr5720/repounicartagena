@@ -33,7 +33,7 @@ export function isEvaluador(user: User | null | undefined) {
 
 export function canUploadDocuments(user: User | null | undefined) {
   const role = getEffectiveRole(user);
-  return role === "estudiante" || role === "admin";
+  return role === "docente" || role === "admin";
 }
 
 export function canViewAllDocuments(user: User | null | undefined) {
@@ -42,7 +42,7 @@ export function canViewAllDocuments(user: User | null | undefined) {
 }
 
 export function canAccessModeration(user: User | null | undefined) {
-  return isAdmin(user) || isDocente(user);
+  return isAdmin(user);
 }
 
 export function canAccessEvaluation(user: User | null | undefined) {
@@ -57,12 +57,16 @@ export function canManageDocuments(user: User | null | undefined) {
   return canUploadDocuments(user);
 }
 
-function canStudentMutateDocument(
+export function canUseFavorites(user: User | null | undefined) {
+  return !!user;
+}
+
+function canOwnerMutateDocument(
   user: User | null | undefined,
   document: PublicationLike,
   allowedStatuses: PublicationWorkflowStatus[],
 ) {
-  if (!user || getEffectiveRole(user) !== "estudiante") {
+  if (!user || getEffectiveRole(user) !== "docente") {
     return false;
   }
 
@@ -80,7 +84,7 @@ export function canEditDocument(
     return true;
   }
 
-  return canStudentMutateDocument(user, document, [
+  return canOwnerMutateDocument(user, document, [
     "borrador",
     "ajustes_solicitados",
   ]);
@@ -94,7 +98,7 @@ export function canDeleteDocument(
     return true;
   }
 
-  return canStudentMutateDocument(user, document, [
+  return canOwnerMutateDocument(user, document, [
     "borrador",
     "ajustes_solicitados",
     "rechazada",
@@ -105,30 +109,14 @@ export function canSubmitForReview(
   user: User | null | undefined,
   document: PublicationLike,
 ) {
-  return canStudentMutateDocument(user, document, [
+  if (isAdmin(user)) {
+    return true;
+  }
+
+  return canOwnerMutateDocument(user, document, [
     "borrador",
     "ajustes_solicitados",
   ]);
-}
-
-export function canStartDocenteReview(
-  user: User | null | undefined,
-  document: Pick<Publication, "workflow_status">,
-) {
-  return (
-    (isDocente(user) || isAdmin(user)) && document.workflow_status === "enviada"
-  );
-}
-
-export function canRequestAdjustments(
-  user: User | null | undefined,
-  document: Pick<Publication, "workflow_status">,
-) {
-  return (
-    (isDocente(user) || isAdmin(user)) &&
-    (document.workflow_status === "enviada" ||
-      document.workflow_status === "en_revision_docente")
-  );
 }
 
 export function canSendToEvaluation(
@@ -137,8 +125,8 @@ export function canSendToEvaluation(
 ) {
   return (
     (isDocente(user) || isAdmin(user)) &&
-    (document.workflow_status === "enviada" ||
-      document.workflow_status === "en_revision_docente")
+    (document.workflow_status === "borrador" ||
+      document.workflow_status === "ajustes_solicitados")
   );
 }
 
@@ -148,7 +136,7 @@ export function canStartEvaluation(
 ) {
   return (
     (isEvaluador(user) || isAdmin(user)) &&
-    document.workflow_status === "enviada_a_evaluacion"
+    document.workflow_status === "enviada"
   );
 }
 
@@ -158,7 +146,7 @@ export function canApprovePublication(
 ) {
   return (
     (isEvaluador(user) || isAdmin(user)) &&
-    (document.workflow_status === "enviada_a_evaluacion" ||
+    (document.workflow_status === "enviada" ||
       document.workflow_status === "en_evaluacion")
   );
 }

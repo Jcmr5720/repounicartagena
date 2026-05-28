@@ -17,4 +17,4 @@ Este directorio resume el trabajo realizado para mover la aplicación a un model
 - Los programas académicos viven en `public.cartagena_producto_programa` y `cartagena_producto_producto` los referencia con `programa_id`.
 - Los permisos se protegen con RLS en Supabase y también se reflejan en el frontend.
 - El perfil de metadatos del recurso está normalizado y justificado en `metadata.md`.
-- El workflow academico ya separa borrador, revision docente, evaluacion, aprobacion, publicacion y suspension.
+- El workflow academico vigente separa borrador, envio a evaluacion, evaluacion formal, aprobacion, publicacion y suspension.

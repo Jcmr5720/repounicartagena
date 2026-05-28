@@ -5,6 +5,7 @@ import { AlertCircle, ArrowLeft, Download } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Publication } from "@/lib/types";
+import { PublicationFavoriteButton } from "./publication-favorite-button";
 import { PublicationDetailContent } from "./publication-detail-content";
 
 interface PublicationDetailPageProps {
@@ -40,12 +41,20 @@ export function PublicationDetailPage({
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between gap-3">
-        <Button asChild variant="ghost" className="gap-2">
-          <Link href="/explorar">
-            <ArrowLeft className="h-4 w-4" />
-            Volver a explorar
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="ghost" className="gap-2">
+            <Link href="/explorar">
+              <ArrowLeft className="h-4 w-4" />
+              Volver a explorar
+            </Link>
+          </Button>
+          <PublicationFavoriteButton
+            publicationId={publication.id}
+            variant="outline"
+            size="sm"
+            showLabel
+          />
+        </div>
 
         {publication.pdfUrl ? (
           <Button asChild className="gap-2">

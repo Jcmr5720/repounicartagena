@@ -10,9 +10,7 @@ export type DocumentStatus = "disponible" | "suspendido";
 export type PublicationWorkflowStatus =
   | "borrador"
   | "enviada"
-  | "en_revision_docente"
   | "ajustes_solicitados"
-  | "enviada_a_evaluacion"
   | "en_evaluacion"
   | "aprobada"
   | "rechazada"
@@ -21,9 +19,6 @@ export type PublicationWorkflowStatus =
 
 export type PublicationWorkflowAction =
   | "submit_for_review"
-  | "start_docente_review"
-  | "request_adjustments"
-  | "send_to_evaluation"
   | "start_evaluation"
   | "approve"
   | "reject"
@@ -145,6 +140,13 @@ export interface PublicationEvaluation {
   updated_at: string;
 }
 
+export interface PublicationFavorite {
+  id: string;
+  user_id: string;
+  publication_id: string;
+  created_at: string;
+}
+
 export const EVALUATION_CRITERIA: Array<{
   key: EvaluationCriteriaKey;
   label: string;
@@ -231,9 +233,7 @@ export const PUBLICATION_WORKFLOW_STATUS_LABELS: Record<
 > = {
   borrador: "Borrador",
   enviada: "Enviada",
-  en_revision_docente: "En revision docente",
   ajustes_solicitados: "Ajustes solicitados",
-  enviada_a_evaluacion: "Enviada a evaluacion",
   en_evaluacion: "En evaluacion",
   aprobada: "Aprobada",
   rechazada: "Rechazada",
@@ -245,11 +245,8 @@ export const PUBLICATION_WORKFLOW_ACTION_LABELS: Record<
   PublicationWorkflowAction,
   string
 > = {
-  submit_for_review: "Enviar a revision",
-  start_docente_review: "Revisar",
-  request_adjustments: "Solicitar ajustes",
-  send_to_evaluation: "Enviar a evaluacion",
-  start_evaluation: "Evaluar",
+  submit_for_review: "Enviar a evaluacion",
+  start_evaluation: "Iniciar evaluacion",
   approve: "Aprobar",
   reject: "Rechazar",
   return_with_observations: "Devolver con observaciones",

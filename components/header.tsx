@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { ChevronDown, LogOut, Menu, User, X } from "lucide-react";
+import { ChevronDown, Heart, LogOut, Menu, User, X } from "lucide-react";
 import {
   AccessibilityControls,
   AccessibilityControlsMobile,
@@ -19,11 +19,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
+import { usePublications } from "@/lib/publications-context";
 import {
   canAccessAdmin,
   canAccessEvaluation,
   canAccessModeration,
   canManageDocuments,
+  canUseFavorites,
 } from "@/lib/permissions";
 import { ROLE_LABELS } from "@/lib/types";
 
@@ -36,12 +38,15 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
+  const { favorites, publications } = usePublications();
 
   const navItems = useMemo<NavItem[]>(() => {
     return [
       { label: "Inicio", href: "/" },
       { label: "Explorar", href: "/explorar" },
-      ...(canManageDocuments(user) ? [{ label: "Subir REDS", href: "/subir" }] : []),
+      ...(canManageDocuments(user)
+        ? [{ label: "Gestionar publicaciones", href: "/subir" }]
+        : []),
     ];
   }, [user]);
 
@@ -61,6 +66,20 @@ export function Header() {
   };
 
   const roleLabel = user ? ROLE_LABELS[user.role] : "";
+  const favoritePublications = useMemo(
+    () =>
+      favorites
+        .map((favorite) =>
+          publications.find(
+            (publication) => publication.id === favorite.publication_id,
+          ),
+        )
+        .filter((publication): publication is (typeof publications)[number] =>
+          !!publication,
+        )
+        .slice(0, 6),
+    [favorites, publications],
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -106,60 +125,103 @@ export function Header() {
             {isLoading ? (
               <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1">
-                    <User className="h-4 w-4" />
-                    <span className="max-w-[10rem] truncate">{user.username}</span>
-                    <ChevronDown className="h-4 w-4 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel className="space-y-1 px-2 py-1.5">
-                    <div className="text-sm font-medium text-foreground">
-                      {user.full_name}
-                    </div>
-                    <div className="text-xs font-normal text-muted-foreground">
-                      {roleLabel}
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/cuenta">Mi cuenta</Link>
-                  </DropdownMenuItem>
-                  {canManageDocuments(user) ? (
+              <>
+                {canUseFavorites(user) ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon-sm" aria-label="Favoritos">
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                      <DropdownMenuLabel className="space-y-1 px-2 py-1.5">
+                        <div className="text-sm font-medium text-foreground">
+                          Favoritos
+                        </div>
+                        <div className="text-xs font-normal text-muted-foreground">
+                          Tus publicaciones guardadas para acceso rapido.
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {favoritePublications.length > 0 ? (
+                        favoritePublications.map((publication) => (
+                          <DropdownMenuItem asChild key={publication.id}>
+                            <Link
+                              href={`/publicaciones/${publication.id}`}
+                              className="flex flex-col items-start"
+                            >
+                              <span className="line-clamp-1 font-medium">
+                                {publication.titulo}
+                              </span>
+                              <span className="line-clamp-1 text-xs text-muted-foreground">
+                                {publication.autor}
+                              </span>
+                            </Link>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="px-3 py-4 text-sm text-muted-foreground">
+                          Aun no tienes publicaciones favoritas.
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : null}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <User className="h-4 w-4" />
+                      <span className="max-w-[10rem] truncate">{user.username}</span>
+                      <ChevronDown className="h-4 w-4 opacity-70" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuLabel className="space-y-1 px-2 py-1.5">
+                      <div className="text-sm font-medium text-foreground">
+                        {user.full_name}
+                      </div>
+                      <div className="text-xs font-normal text-muted-foreground">
+                        {roleLabel}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/subir">Mis recursos</Link>
+                      <Link href="/cuenta">Mi cuenta</Link>
                     </DropdownMenuItem>
-                  ) : null}
-                  {canAccessModeration(user) ? (
-                    <DropdownMenuItem asChild>
-                      <Link href="/moderacion">Revision docente</Link>
+                    {canManageDocuments(user) ? (
+                      <DropdownMenuItem asChild>
+                        <Link href="/subir">Gestionar recursos</Link>
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canAccessModeration(user) ? (
+                      <DropdownMenuItem asChild>
+                        <Link href="/moderacion">Flujo docente</Link>
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canAccessEvaluation(user) ? (
+                      <DropdownMenuItem asChild>
+                        <Link href="/gestion-publicaciones">Gestion publicaciones</Link>
+                      </DropdownMenuItem>
+                    ) : null}
+                    {canAccessAdmin(user) ? (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin">Administrar</Link>
+                      </DropdownMenuItem>
+                    ) : null}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onSelect={(event) => {
+                        event.preventDefault();
+                        void handleLogout();
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Cerrar sesion
                     </DropdownMenuItem>
-                  ) : null}
-                  {canAccessEvaluation(user) ? (
-                    <DropdownMenuItem asChild>
-                      <Link href="/gestion-publicaciones">Gestion publicaciones</Link>
-                    </DropdownMenuItem>
-                  ) : null}
-                  {canAccessAdmin(user) ? (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">Administrar</Link>
-                    </DropdownMenuItem>
-                  ) : null}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={(event) => {
-                      event.preventDefault();
-                      void handleLogout();
-                    }}
-                    className="text-destructive focus:text-destructive"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar sesion
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <Button asChild>
                 <Link href="/auth">Iniciar sesion</Link>
@@ -198,13 +260,41 @@ export function Header() {
             <div className="border-t border-border pt-2">
               {user ? (
                 <div className="space-y-3 px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{user.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{roleLabel}</p>
+                <div>
+                  <p className="text-sm font-medium text-foreground">{user.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{roleLabel}</p>
+                </div>
+                {canUseFavorites(user) ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      Favoritos
+                    </p>
+                    {favoritePublications.length > 0 ? (
+                      favoritePublications.map((publication) => (
+                        <Link
+                          key={publication.id}
+                          href={`/publicaciones/${publication.id}`}
+                          onClick={closeMobileMenu}
+                          className="block rounded-md border border-border px-3 py-2 text-sm"
+                        >
+                          <p className="line-clamp-1 font-medium text-foreground">
+                            {publication.titulo}
+                          </p>
+                          <p className="line-clamp-1 text-xs text-muted-foreground">
+                            {publication.autor}
+                          </p>
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Aun no tienes favoritos guardados.
+                      </p>
+                    )}
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start gap-2"
+                ) : null}
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
                     onClick={() => void handleLogout()}
                   >
                     <LogOut className="h-4 w-4" />

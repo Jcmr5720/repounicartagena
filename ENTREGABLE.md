@@ -1,7 +1,7 @@
 # ENTREGABLE
 
-Este archivo reune la respuesta tecnica de cada criterio revisado en el proyecto,
-indicando si ya esta implementado y cual es la evidencia principal.
+Este archivo resume el estado tecnico del proyecto y la evidencia principal por
+criterio.
 
 ## Pregunta 1
 
@@ -12,19 +12,13 @@ El contexto educativo esta definido, con una justificacion precisa y pertinente.
 Implementado.
 
 **Respuesta tecnica:**  
-El proyecto define un contexto educativo e institucional claro. La plataforma se
-presenta como repositorio de recursos digitales academicos, separa consulta
-publica de gestion interna y organiza la experiencia alrededor de programas,
-metadatos y flujo de publicaciones.
+El proyecto define un repositorio academico con consulta publica y flujo interno
+de control. La arquitectura combina exploracion, detalle, gestion docente,
+evaluacion formal y administracion institucional.
 
-La justificacion es pertinente porque el sistema ya opera con un modelo funcional
-de roles, permisos y workflow academico. Esa logica se refleja en
-`app/como-funciona/page.tsx`, `docs/implementation.md`, `docs/workflows.md`,
-`lib/permissions.ts` y `lib/types.ts`.
-
-El diseno se adapta al contexto porque la interfaz prioriza exploracion, detalle
-academico, carga de PDF, seguimiento del estado del recurso y paneles internos
-para revision, evaluacion y administracion.
+La evidencia principal esta en `app/como-funciona/page.tsx`,
+`docs/implementation.md`, `docs/workflows.md`, `lib/permissions.ts` y
+`lib/types.ts`.
 
 **Conclusion:**  
 Si esta implementado.
@@ -38,32 +32,20 @@ Presenta una estructura clara, coherente e innovadora. Incluye funcionalidades c
 Implementado.
 
 **Respuesta tecnica:**  
-La estructura del proyecto es clara y coherente: home, exploracion, detalle,
-subida, revision docente, evaluacion y administracion quedaron separadas por
-responsabilidad y conectadas por permisos.
-
-Las funcionalidades de carga y descarga estan implementadas en
-`components/upload-page.tsx`, `components/publication-detail-page.tsx` y
-`components/publication-detail-modal.tsx`.
-
-La evaluacion ya existe como modulo funcional, no solo como idea. El proyecto
-implementa una evaluacion academica formal con rubrica fija de 4 criterios,
-puntajes de 1 a 5, total automatico sobre 20, concepto final, fortalezas,
-mejoras y observaciones generales.
+La plataforma ya no trata la evaluacion como una idea o un boton simple. Existe
+un modulo formal y persistente de evaluacion academica con rubrica fija,
+puntajes, concepto, fortalezas, mejoras, observaciones y decision final en la
+misma pantalla del evaluador.
 
 La evidencia principal esta en:
 
-- `components/evaluation-form.tsx`: formulario de evaluacion con rubrica, total,
-  concepto final y botones validados de decision.
-- `components/publication-management-page.tsx`: integra la evaluacion formal con
-  el flujo de trabajo del evaluador.
-- `lib/publications-context.tsx`: guarda y consulta evaluaciones persistidas en
-  Supabase.
-- `supabase/migrations/20260527000300_cartagena_evaluation_rubric.sql`: amplia
-  `cartagena_publication_evaluations`, crea funciones de guardado y validacion,
-  y ajusta policies.
+- `components/evaluation-form.tsx`
+- `components/publication-management-page.tsx`
+- `lib/publications-context.tsx`
+- `supabase/migrations/20260527000300_cartagena_evaluation_rubric.sql`
+- `supabase/migrations/20260527000400_cartagena_docente_workflow_favorites.sql`
 
-La tabla `cartagena_publication_evaluations` persiste:
+La tabla `cartagena_publication_evaluations` persiste como minimo:
 
 - `publication_id`
 - `evaluator_id`
@@ -75,16 +57,11 @@ La tabla `cartagena_publication_evaluations` persiste:
 - `comments`
 - `evaluated_at`
 
-Ademas, el sistema impide decisiones sin evidencia: antes de `Aprobar`,
-`Rechazar` o `Devolver con observaciones`, la funcion
-`cartagena_apply_publication_workflow_action(...)` valida que exista una
-evaluacion completa asociada a la publicacion.
+Ademas, el sistema impide decisiones sin evidencia academica completa antes de
+aprobar, rechazar o devolver con observaciones.
 
-Los flujos de trabajo tambien quedaron articulados. El estudiante envia, el
-docente revisa, el evaluador decide y el admin publica o suspende. Esa logica se
-centraliza en `lib/permissions.ts`, `lib/publications-context.tsx` y en las
-migraciones `supabase/migrations/20260527000100_cartagena_role_expansion.sql` y
-`supabase/migrations/20260527000200_cartagena_academic_workflow.sql`.
+Tambien se implementa carga de PDF, detalle descargable, workflow de estados y
+favoritos persistentes en Supabase.
 
 **Conclusion:**  
 Si esta implementado.
@@ -98,14 +75,10 @@ Se seleccionan y justifican metadatos relevantes, basados en estandares como LOM
 Implementado.
 
 **Respuesta tecnica:**  
-El sistema ya expone un perfil de metadatos alineado con Dublin Core y LOM. La
-normalizacion esta en `lib/publication-metadata.ts`, la visualizacion en
-`components/publication-metadata-section.tsx` y la justificacion en
-`docs/metadata.md`.
-
-Los campos seleccionados incluyen titulo, autor, descripcion, programa academico,
-anio, linea tematica y palabras clave, alineados con el contexto de recursos
-digitales academicos.
+El sistema expone titulo, autor, descripcion, programa academico, anio, linea
+tematica y palabras clave, alineados con el contexto de recursos digitales
+academicos. La normalizacion se apoya en `lib/publication-metadata.ts` y su
+representacion visual en `components/publication-metadata-section.tsx`.
 
 **Conclusion:**  
 Si esta implementado.
@@ -119,40 +92,31 @@ Se describen claramente los distintos roles (administrador, docente, estudiante,
 Implementado.
 
 **Respuesta tecnica:**  
-El proyecto implementa de forma real los roles `estudiante`, `docente`,
-`evaluador` y `admin`. La definicion tecnica esta en `lib/types.ts`,
-`lib/permissions.ts`, `docs/auth.md` y `docs/workflows.md`.
+Los roles funcionales finales del proyecto quedaron definidos asi:
 
-Los roles tienen efecto real en:
+- `estudiante`: consulta publicaciones, ve detalles y guarda favoritos.
+- `docente`: crea o sube publicaciones y las envia a evaluacion.
+- `evaluador`: diligencia la evaluacion formal y decide.
+- `admin`: administra usuarios, roles, publicaciones y publica al final.
 
-- permisos
-- navegacion
-- botones visibles
-- rutas protegidas
-- flujo de estados
-- documentacion
+La evidencia principal esta en:
 
-Evidencia principal:
-
-- `components/header.tsx`: la navegacion cambia segun rol.
-- `components/upload-page.tsx`: el estudiante ve su estado, observaciones y puede
-  enviar a revision.
-- `components/moderation-page.tsx`: el docente ve `Revisar`, `Solicitar ajustes`
-  y `Enviar a evaluacion`.
-- `components/publication-management-page.tsx`: el evaluador ve `Evaluar`,
-  `Aprobar`, `Rechazar` y `Devolver con observaciones`.
-- `components/admin-page.tsx`: el admin conserva control total.
-- `supabase/migrations/20260527000100_cartagena_role_expansion.sql` y
-  `supabase/migrations/20260527000200_cartagena_academic_workflow.sql`: definen
-  roles, estados, transiciones, tablas de revision, evaluacion y bitacora.
+- `lib/types.ts`
+- `lib/permissions.ts`
+- `lib/publications-context.tsx`
+- `components/header.tsx`
+- `components/upload-page.tsx`
+- `components/publication-management-page.tsx`
+- `components/admin-page.tsx`
+- `docs/auth.md`
+- `docs/workflows.md`
 
 El flujo academico implementado es:
 
-`borrador -> enviada -> en_revision_docente -> ajustes_solicitados / enviada_a_evaluacion -> en_evaluacion -> aprobada / rechazada -> publicada / suspendida`
+`borrador -> enviada -> en_evaluacion -> ajustes_solicitados / aprobada / rechazada -> publicada / suspendida`
 
-Sobre `moderador`, el proyecto mantiene compatibilidad temporal pero el modelo
-academico final queda compuesto por `estudiante`, `docente`, `evaluador` y `admin`.
-En la implementacion, `moderador` se mapea funcionalmente a `evaluador`.
+La publicacion final publica sigue en manos de `admin` por compatibilidad y
+control institucional.
 
 **Conclusion:**  
 Si esta implementado.
@@ -166,17 +130,13 @@ La propuesta incluye un prototipo bien disenado, funcional y esteticamente adecu
 Parcialmente implementado.
 
 **Respuesta tecnica:**  
-El prototipo es funcional, estructurado y visualmente consistente. La UI cubre
-consulta publica, detalle, carga, revision, evaluacion y administracion con una
-presentacion institucional solida.
-
-La parte que conviene defender con mas cuidado es la creatividad visual. El
-proyecto tiene buena coherencia editorial e institucional, pero su propuesta
-grafica es mas sobria que experimental.
+El prototipo es funcional, consistente y adecuado para el contexto
+institucional. La propuesta visual es sobria y clara, con foco en legibilidad,
+flujo academico y paneles operativos.
 
 **Conclusion:**  
-La mayor parte del criterio si esta implementada, pero la parte de creatividad
-visual puede presentarse como moderada y no como un rasgo extremo del sistema.
+La mayor parte del criterio esta implementada, aunque el componente de
+creatividad visual es moderado frente a una propuesta mas experimental.
 
 ## Pregunta 6
 
@@ -187,9 +147,8 @@ Evidencia el uso etico de la IAG (para apoyo, redaccion o busqueda), citando las
 No implementado.
 
 **Respuesta tecnica:**  
-No hay en el repositorio una declaracion formal de uso etico de IAG, ni una
-seccion que cite herramientas, delimite el tipo de apoyo recibido o distinga con
-claridad la autoria academica propia.
+El repositorio no contiene todavia una declaracion formal sobre uso etico de
+IAG, herramientas utilizadas ni delimitacion de autoria.
 
 **Conclusion:**  
 No esta implementado como evidencia documental dentro del repo.
@@ -203,8 +162,8 @@ Aplica las normas APA 7.ª edicion en citas textuales, parafrasis, referencias b
 No implementado.
 
 **Respuesta tecnica:**  
-La documentacion actual es tecnica y clara, pero no sigue de manera formal y
-sistematica APA 7 en citas, parafrasis, referencias ni formato general.
+La documentacion tecnica es clara, pero no sigue de forma sistematica el formato
+APA 7 en citas, referencias y estructura academica.
 
 **Conclusion:**  
 No esta implementado todavia.
