@@ -185,8 +185,6 @@ Si hay duda sobre proporciones, color o composición, mirar primero esta ruta.
   - carga de publicaciones y flujo de edición si aplica
 - `/gestion-publicaciones`:
   - administración unificada de documentos
-- `/moderacion`:
-  - control operativo para moderadores y admin
 - `/admin`:
   - administración de usuarios y roles
 - `/cuenta`:

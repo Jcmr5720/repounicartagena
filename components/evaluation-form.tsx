@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AlertCircle, CheckCircle2, RotateCcw, Save, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,52 +14,84 @@ import {
   type PublicationEvaluation,
   type PublicationEvaluationInput,
 } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 interface EvaluationFormProps {
   publicationId: string;
   initialEvaluation?: PublicationEvaluation;
-  onSave: (
-    input: PublicationEvaluationInput,
-  ) => Promise<{ success: boolean; error?: string }>;
-  onDecision: (
-    input: PublicationEvaluationInput,
-    action: EvaluationDecision,
-  ) => Promise<{ success: boolean; error?: string }>;
+  onSave: (input: PublicationEvaluationInput) => Promise<{ success: boolean; error?: string }>;
+  onDecision: (input: PublicationEvaluationInput, action: EvaluationDecision) => Promise<{ success: boolean; error?: string }>;
 }
 
-function normalizeScores(
-  scores?: EvaluationCriteriaScores,
-): EvaluationCriteriaScores {
+function normalizeScores(scores?: EvaluationCriteriaScores): EvaluationCriteriaScores {
   return {
-    calidad_academica: scores?.calidad_academica,
-    pertinencia_tematica: scores?.pertinencia_tematica,
-    claridad_redaccion: scores?.claridad_redaccion,
+    calidad_academica:           scores?.calidad_academica,
+    pertinencia_tematica:        scores?.pertinencia_tematica,
+    claridad_redaccion:          scores?.claridad_redaccion,
     uso_metadatos_documentacion: scores?.uso_metadatos_documentacion,
   };
 }
 
-export function EvaluationForm({
-  publicationId,
-  initialEvaluation,
-  onSave,
-  onDecision,
-}: EvaluationFormProps) {
+/* Barra de progreso del puntaje */
+function ScoreBar({ score, max = 20 }: { score: number; max?: number }) {
+  const pct = Math.min((score / max) * 100, 100);
+  const color = pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-lime-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+        <div className={`h-full rounded-full transition-all duration-300 ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+      <span className={`text-sm font-bold ${pct >= 80 ? "text-emerald-700" : pct >= 60 ? "text-lime-700" : pct >= 40 ? "text-amber-700" : "text-red-600"}`}>
+        {score}/{max}
+      </span>
+    </div>
+  );
+}
+
+/* Selector de puntaje 1-5 con botones visuales */
+function ScoreSelector({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: number | undefined;
+  onChange: (v: number | undefined) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="flex gap-1">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          disabled={disabled}
+          onClick={() => onChange(value === n ? undefined : n)}
+          className={cn(
+            "h-8 w-8 rounded-lg border text-xs font-semibold transition-all",
+            value === n
+              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+              : "border-border bg-background text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
+            disabled && "cursor-not-allowed opacity-50",
+          )}
+          aria-label={`Puntaje ${n}`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function EvaluationForm({ publicationId, initialEvaluation, onSave, onDecision }: EvaluationFormProps) {
   const [criteriaScores, setCriteriaScores] = useState<EvaluationCriteriaScores>(
     normalizeScores(initialEvaluation?.criteria_scores),
   );
-  const [decision, setDecision] = useState<EvaluationDecision | "">(
-    initialEvaluation?.decision ?? "",
-  );
-  const [strengths, setStrengths] = useState(initialEvaluation?.strengths ?? "");
-  const [improvements, setImprovements] = useState(
-    initialEvaluation?.improvements ?? "",
-  );
-  const [comments, setComments] = useState(initialEvaluation?.comments ?? "");
+  const [decision, setDecision]       = useState<EvaluationDecision | "">(initialEvaluation?.decision ?? "");
+  const [strengths, setStrengths]     = useState(initialEvaluation?.strengths ?? "");
+  const [improvements, setImprovements] = useState(initialEvaluation?.improvements ?? "");
+  const [comments, setComments]       = useState(initialEvaluation?.comments ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [feedback, setFeedback] = useState<{
-    kind: "success" | "error";
-    message: string;
-  } | null>(null);
+  const [feedback, setFeedback]       = useState<{ kind: "success" | "error"; message: string } | null>(null);
 
   useEffect(() => {
     setCriteriaScores(normalizeScores(initialEvaluation?.criteria_scores));
@@ -69,25 +102,16 @@ export function EvaluationForm({
   }, [initialEvaluation]);
 
   const totalScore = useMemo(
-    () =>
-      EVALUATION_CRITERIA.reduce((total, criterion) => {
-        const score = criteriaScores[criterion.key];
-        return total + (typeof score === "number" ? score : 0);
-      }, 0),
+    () => EVALUATION_CRITERIA.reduce((t, c) => t + (typeof criteriaScores[c.key] === "number" ? (criteriaScores[c.key] as number) : 0), 0),
     [criteriaScores],
   );
 
   const hasCompleteCriteria = useMemo(
-    () =>
-      EVALUATION_CRITERIA.every(
-        (criterion) => typeof criteriaScores[criterion.key] === "number",
-      ),
+    () => EVALUATION_CRITERIA.every((c) => typeof criteriaScores[c.key] === "number"),
     [criteriaScores],
   );
 
-  const buildPayload = (
-    nextDecision?: EvaluationDecision | null,
-  ): PublicationEvaluationInput => ({
+  const buildPayload = (nextDecision?: EvaluationDecision | null): PublicationEvaluationInput => ({
     publication_id: publicationId,
     criteria_scores: criteriaScores,
     decision: nextDecision ?? (decision || null),
@@ -96,217 +120,206 @@ export function EvaluationForm({
     comments,
   });
 
-  const handleScoreChange = (key: EvaluationCriteriaKey, value: string) => {
-    setCriteriaScores((current) => ({
-      ...current,
-      [key]: value ? Number(value) : undefined,
-    }));
+  const handleScoreChange = (key: EvaluationCriteriaKey, value: number | undefined) => {
+    setCriteriaScores((cur) => ({ ...cur, [key]: value }));
   };
 
   const handleSave = async () => {
     setIsSubmitting(true);
     setFeedback(null);
-
     const result = await onSave(buildPayload(null));
-    if (!result.success) {
-      setFeedback({
-        kind: "error",
-        message: result.error || "No se pudo guardar la evaluacion.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    setFeedback({
-      kind: "success",
-      message: "La evaluacion academica quedo guardada en Supabase.",
-    });
+    setFeedback(result.success
+      ? { kind: "success", message: "Evaluación guardada correctamente en Supabase." }
+      : { kind: "error", message: result.error || "No se pudo guardar la evaluación." });
     setIsSubmitting(false);
   };
 
   const handleDecision = async (action: EvaluationDecision) => {
     setIsSubmitting(true);
     setFeedback(null);
-
     const result = await onDecision(buildPayload(action), action);
     if (!result.success) {
-      setFeedback({
-        kind: "error",
-        message: result.error || "No se pudo registrar la decision academica.",
-      });
+      setFeedback({ kind: "error", message: result.error || "No se pudo registrar la decisión académica." });
       setIsSubmitting(false);
       return;
     }
-
     setDecision(action);
-    setFeedback({
-      kind: "success",
-      message: `La decision ${EVALUATION_DECISION_LABELS[action].toLowerCase()} quedo registrada.`,
-    });
+    setFeedback({ kind: "success", message: `Decisión "${EVALUATION_DECISION_LABELS[action].toLowerCase()}" registrada.` });
     setIsSubmitting(false);
   };
 
   const canApprove = hasCompleteCriteria && totalScore >= 16;
-  const canReject = hasCompleteCriteria && !!comments.trim();
-  const canReturn = hasCompleteCriteria && !!(improvements.trim() || comments.trim());
+  const canReject  = hasCompleteCriteria && !!comments.trim();
+  const canReturn  = hasCompleteCriteria && !!(improvements.trim() || comments.trim());
 
   return (
-    <div className="rounded-2xl border border-border/70 bg-muted/20 p-5">
-      <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">
-            Evaluacion academica formal
-          </h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Diligencia la rubrica, guarda la evidencia y luego emite una decision.
-          </p>
-        </div>
-        <Badge variant="secondary" className="w-fit">
-          Total actual: {totalScore}/20
-        </Badge>
-      </div>
+    <div className="space-y-5">
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {EVALUATION_CRITERIA.map((criterion) => (
-          <div
-            key={criterion.key}
-            className="rounded-xl border border-border bg-background p-4"
+      {/* ── Encabezado con puntaje total ── */}
+      <div className="rounded-2xl border border-border/60 bg-background p-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold text-foreground">Puntaje total acumulado</p>
+          <Badge
+            variant="secondary"
+            className={cn("text-sm font-bold", totalScore >= 16 ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800")}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-medium text-foreground">{criterion.label}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {criterion.description}
-                </p>
-              </div>
-              <select
-                className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-                value={criteriaScores[criterion.key]?.toString() ?? ""}
-                onChange={(event) => handleScoreChange(criterion.key, event.target.value)}
-                disabled={isSubmitting}
-              >
-                <option value="">Puntaje</option>
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <option key={value} value={value.toString()}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        ))}
+            {totalScore}/20
+          </Badge>
+        </div>
+        <ScoreBar score={totalScore} max={20} />
+        <p className="mt-2 text-xs text-muted-foreground">
+          Se requiere mínimo <strong>16/20</strong> para aprobar. Puntaje actual:{" "}
+          <strong className={totalScore >= 16 ? "text-emerald-700" : "text-amber-700"}>{totalScore}</strong>.
+        </p>
       </div>
 
-      <div className="mt-5 grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
+      {/* ── Criterios de evaluación ── */}
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Criterios de evaluación
+        </p>
+        <div className="grid gap-3 md:grid-cols-2">
+          {EVALUATION_CRITERIA.map((criterion) => {
+            const score = criteriaScores[criterion.key];
+            const filled = typeof score === "number";
+            return (
+              <div
+                key={criterion.key}
+                className={cn(
+                  "rounded-xl border p-4 transition-colors",
+                  filled ? "border-primary/20 bg-primary/[0.02]" : "border-border/60 bg-background",
+                )}
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{criterion.label}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{criterion.description}</p>
+                  </div>
+                  {filled && (
+                    <Badge className="shrink-0 bg-primary/10 text-primary hover:bg-primary/10 text-xs">
+                      {score}/5
+                    </Badge>
+                  )}
+                </div>
+                <ScoreSelector
+                  value={criteriaScores[criterion.key]}
+                  onChange={(v) => handleScoreChange(criterion.key, v)}
+                  disabled={isSubmitting}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Campos de texto ── */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-1.5">
           <label className="text-sm font-medium text-foreground">Fortalezas</label>
           <Textarea
             rows={4}
             value={strengths}
-            onChange={(event) => setStrengths(event.target.value)}
+            onChange={(e) => setStrengths(e.target.value)}
             placeholder="Describe los aspectos fuertes del recurso."
             disabled={isSubmitting}
+            className="resize-none text-sm"
           />
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Mejoras</label>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-foreground">Mejoras sugeridas</label>
           <Textarea
             rows={4}
             value={improvements}
-            onChange={(event) => setImprovements(event.target.value)}
+            onChange={(e) => setImprovements(e.target.value)}
             placeholder="Indica ajustes o recomendaciones concretas."
             disabled={isSubmitting}
+            className="resize-none text-sm"
           />
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Observaciones generales
-          </label>
-          <Textarea
-            rows={4}
-            value={comments}
-            onChange={(event) => setComments(event.target.value)}
-            placeholder="Registra la justificacion general de la evaluacion."
-            disabled={isSubmitting}
-          />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Concepto final
-          </label>
-          <select
-            className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
-            value={decision}
-            onChange={(event) =>
-              setDecision(event.target.value as EvaluationDecision | "")
-            }
-            disabled={isSubmitting}
-          >
-            <option value="">Selecciona concepto</option>
-            <option value="approve">Aprobar</option>
-            <option value="reject">Rechazar</option>
-            <option value="return_with_observations">
-              Devolver con observaciones
-            </option>
-          </select>
-          <p className="text-xs text-muted-foreground">
-            El concepto queda persistido junto con la rubrica y el puntaje total.
-          </p>
-        </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-foreground">Observaciones generales</label>
+        <Textarea
+          rows={3}
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+          placeholder="Registra la justificación general de la evaluación."
+          disabled={isSubmitting}
+          className="resize-none text-sm"
+        />
       </div>
 
-      {feedback ? (
-        <div
-          className={`mt-4 rounded-lg px-4 py-3 text-sm ${
-            feedback.kind === "success"
-              ? "bg-green-50 text-green-800"
-              : "bg-destructive/10 text-destructive"
-          }`}
-        >
+      {/* ── Feedback ── */}
+      {feedback && (
+        <div className={cn(
+          "flex items-start gap-3 rounded-xl border px-4 py-3 text-sm",
+          feedback.kind === "success"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+            : "border-destructive/20 bg-destructive/8 text-destructive",
+        )}>
+          {feedback.kind === "success"
+            ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />}
           {feedback.message}
         </div>
-      ) : null}
+      )}
 
-      <div className="mt-5 flex flex-col gap-3 border-t border-border pt-4">
+      {/* ── Acciones ── */}
+      <div className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Decisión académica
+        </p>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             variant="outline"
+            size="sm"
+            className="gap-2"
             onClick={() => void handleSave()}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Guardando..." : "Guardar evaluacion"}
+            <Save className="h-3.5 w-3.5" />
+            {isSubmitting ? "Guardando…" : "Guardar borrador"}
           </Button>
           <Button
             type="button"
+            size="sm"
+            className="gap-2 bg-emerald-600 hover:bg-emerald-500 text-white"
             onClick={() => void handleDecision("approve")}
             disabled={isSubmitting || !canApprove}
+            title={!canApprove ? "Completa todos los criterios y alcanza 16/20 para aprobar" : undefined}
           >
+            <CheckCircle2 className="h-3.5 w-3.5" />
             Aprobar
           </Button>
           <Button
             type="button"
-            variant="outline"
+            size="sm"
+            variant="destructive"
+            className="gap-2"
             onClick={() => void handleDecision("reject")}
             disabled={isSubmitting || !canReject}
+            title={!canReject ? "Completa criterios y agrega observaciones para rechazar" : undefined}
           >
+            <XCircle className="h-3.5 w-3.5" />
             Rechazar
           </Button>
           <Button
             type="button"
+            size="sm"
             variant="outline"
+            className="gap-2 border-orange-300 text-orange-700 hover:bg-orange-50"
             onClick={() => void handleDecision("return_with_observations")}
             disabled={isSubmitting || !canReturn}
+            title={!canReturn ? "Completa criterios y agrega mejoras u observaciones" : undefined}
           >
+            <RotateCcw className="h-3.5 w-3.5" />
             Devolver con observaciones
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Para aprobar se exige un minimo de 16/20. Rechazar requiere justificacion.
-          Devolver exige mejoras u observaciones.
+        <p className="mt-2.5 text-xs text-muted-foreground">
+          Aprobar requiere mínimo 16/20 y todos los criterios completos. Rechazar y devolver requieren observaciones.
         </p>
       </div>
     </div>

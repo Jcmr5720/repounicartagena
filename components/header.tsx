@@ -23,7 +23,6 @@ import { usePublications } from "@/lib/publications-context";
 import {
   canAccessAdmin,
   canAccessEvaluation,
-  canAccessModeration,
   canManageDocuments,
   canUseFavorites,
 } from "@/lib/permissions";
@@ -45,7 +44,7 @@ export function Header() {
       { label: "Inicio", href: "/" },
       { label: "Explorar", href: "/explorar" },
       ...(canManageDocuments(user)
-        ? [{ label: "Gestionar publicaciones", href: "/subir" }]
+        ? [{ label: "Subir REDS", href: "/subir" }]
         : []),
     ];
   }, [user]);
@@ -201,17 +200,12 @@ export function Header() {
                     </DropdownMenuItem>
                     {canManageDocuments(user) ? (
                       <DropdownMenuItem asChild>
-                        <Link href="/subir">Gestionar recursos</Link>
-                      </DropdownMenuItem>
-                    ) : null}
-                    {canAccessModeration(user) ? (
-                      <DropdownMenuItem asChild>
-                        <Link href="/moderacion">Flujo docente</Link>
+                        <Link href="/subir">Subir REDS</Link>
                       </DropdownMenuItem>
                     ) : null}
                     {canAccessEvaluation(user) ? (
                       <DropdownMenuItem asChild>
-                        <Link href="/gestion-publicaciones">Gestion publicaciones</Link>
+                        <Link href="/gestion-publicaciones">Gestionar REDS</Link>
                       </DropdownMenuItem>
                     ) : null}
                     {canAccessAdmin(user) ? (

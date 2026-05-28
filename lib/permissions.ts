@@ -41,10 +41,6 @@ export function canViewAllDocuments(user: User | null | undefined) {
   return role === "admin" || role === "docente" || role === "evaluador";
 }
 
-export function canAccessModeration(user: User | null | undefined) {
-  return isAdmin(user);
-}
-
 export function canAccessEvaluation(user: User | null | undefined) {
   return isAdmin(user) || isEvaluador(user);
 }

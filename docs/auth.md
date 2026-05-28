@@ -51,8 +51,7 @@ interpreta como `evaluador`.
 
 ### Admin
 
-- Accede a `/admin`, `/subir`, `/gestion-publicaciones` y a la vista de
-  compatibilidad de `/moderacion`.
+- Accede a `/admin`, `/subir` y `/gestion-publicaciones`.
 - Conserva control total sobre usuarios, roles, publicaciones y estados.
 - Publica recursos aprobados y puede suspenderlos.
 
