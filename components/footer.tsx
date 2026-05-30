@@ -66,6 +66,14 @@ export function Footer() {
                   Politica de privacidad
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/uso-etico-iag"
+                  className="text-base text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Uso etico de la IAG
+                </Link>
+              </li>
             </ul>
           </div>
 
