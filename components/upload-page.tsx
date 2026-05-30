@@ -30,12 +30,17 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { canManageDocuments, canSubmitForReview } from "@/lib/permissions";
 import { usePublications } from "@/lib/publications-context";
-import { LINEAS_TEMATICAS, PROGRAMAS_ACADEMICOS, type Publication } from "@/lib/types";
+import {
+  getLineasTematicasByPrograma,
+  PROGRAMAS_ACADEMICOS,
+  type Publication,
+} from "@/lib/types";
 
 type FormState = {
   titulo: string;
   autor: string;
   programa: string;
+  lineaId: string;
   anio: string;
   lineaTematica: string;
   resumen: string;
@@ -46,6 +51,7 @@ const INITIAL_FORM: FormState = {
   titulo: "",
   autor: "",
   programa: "",
+  lineaId: "",
   anio: new Date().getFullYear().toString(),
   lineaTematica: "",
   resumen: "",
@@ -60,6 +66,7 @@ export function UploadPage() {
   const {
     publications,
     programas,
+    lineas,
     addPublication,
     applyWorkflowAction,
     updatePublication,
@@ -90,6 +97,7 @@ export function UploadPage() {
       titulo: editingPublication.titulo,
       autor: editingPublication.autor,
       programa: editingPublication.programa_id,
+      lineaId: editingPublication.linea_id,
       anio: editingPublication.año.toString(),
       lineaTematica: editingPublication.lineaTematica,
       resumen: editingPublication.resumen,
@@ -99,6 +107,30 @@ export function UploadPage() {
     setSubmitStatus(null);
     setMessage("");
   }, [editingPublication]);
+
+  const selectedProgramName = useMemo(
+    () => programOptions.find((program) => program.id === formData.programa)?.nombre ?? "",
+    [formData.programa, programOptions],
+  );
+
+  const thematicLineOptions = useMemo(() => {
+    if (!formData.programa) {
+      return [];
+    }
+
+    if (lineas.length > 0) {
+      return lineas
+        .filter((linea) => linea.programa_id === formData.programa)
+        .sort((left, right) => left.nombre.localeCompare(right.nombre, "es"));
+    }
+
+    return getLineasTematicasByPrograma(selectedProgramName).map((nombre) => ({
+      id: nombre,
+      programa_id: formData.programa,
+      nombre,
+      slug: nombre.toLowerCase(),
+    }));
+  }, [formData.programa, lineas, selectedProgramName]);
 
   const manageablePublications = useMemo(() => {
     if (!user) return [];
@@ -198,6 +230,24 @@ export function UploadPage() {
     if (file) handleFileSelect(file);
   };
 
+  const handleProgramChange = (programaId: string) => {
+    setFormData((current) => ({
+      ...current,
+      programa: programaId,
+      lineaId: "",
+      lineaTematica: "",
+    }));
+  };
+
+  const handleThematicLineChange = (lineaId: string) => {
+    const selectedLine = thematicLineOptions.find((linea) => linea.id === lineaId);
+    setFormData((current) => ({
+      ...current,
+      lineaId,
+      lineaTematica: selectedLine?.nombre ?? "",
+    }));
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -208,6 +258,7 @@ export function UploadPage() {
       titulo: formData.titulo.trim(),
       autor: formData.autor.trim(),
       programa: formData.programa.trim(),
+      lineaId: formData.lineaId.trim(),
       anio: parseInt(formData.anio, 10),
       lineaTematica: formData.lineaTematica.trim(),
       resumen: formData.resumen.trim(),
@@ -223,6 +274,7 @@ export function UploadPage() {
             description: payload.resumen,
             autor: payload.autor,
             programa_id: payload.programa,
+            linea_id: payload.lineaId,
             anio: payload.anio,
             lineaTematica: payload.lineaTematica,
             palabrasClave: payload.palabrasClave,
@@ -236,6 +288,7 @@ export function UploadPage() {
             titulo: payload.titulo,
             autor: payload.autor,
             programa_id: payload.programa,
+            linea_id: payload.lineaId,
             año: payload.anio,
             lineaTematica: payload.lineaTematica,
             description: payload.resumen,
@@ -264,6 +317,7 @@ export function UploadPage() {
           description: payload.resumen,
           autor: payload.autor,
           programa_id: payload.programa,
+          linea_id: payload.lineaId,
           anio: payload.anio,
           lineaTematica: payload.lineaTematica,
           palabrasClave: payload.palabrasClave,
@@ -299,6 +353,7 @@ export function UploadPage() {
     !!formData.titulo &&
     !!formData.autor &&
     !!formData.programa &&
+    !!formData.lineaId &&
     !!formData.lineaTematica &&
     !!formData.resumen &&
     !!formData.palabrasClave &&
@@ -429,7 +484,7 @@ export function UploadPage() {
               id="programa"
               className={SELECT_CLASS}
               value={formData.programa}
-              onChange={(e) => setFormData({ ...formData, programa: e.target.value })}
+              onChange={(e) => handleProgramChange(e.target.value)}
               required
             >
               <option value="">Selecciona…</option>
@@ -462,13 +517,16 @@ export function UploadPage() {
           <select
             id="lineaTematica"
             className={SELECT_CLASS}
-            value={formData.lineaTematica}
-            onChange={(e) => setFormData({ ...formData, lineaTematica: e.target.value })}
+            value={formData.lineaId}
+            onChange={(e) => handleThematicLineChange(e.target.value)}
+            disabled={!formData.programa || thematicLineOptions.length === 0}
             required
           >
-            <option value="">Selecciona…</option>
-            {LINEAS_TEMATICAS.map((linea) => (
-              <option key={linea} value={linea}>{linea}</option>
+            <option value="">
+              {formData.programa ? "Selecciona…" : "Selecciona primero un programa"}
+            </option>
+            {thematicLineOptions.map((linea) => (
+              <option key={linea.id} value={linea.id}>{linea.nombre}</option>
             ))}
           </select>
         </div>

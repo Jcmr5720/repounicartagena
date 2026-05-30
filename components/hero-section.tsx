@@ -64,13 +64,14 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
           </div>
 
           <h1 className="mx-auto max-w-4xl text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl lg:text-6xl">
-            Consulta, publica y preserva{" "}
-            <span className="text-primary">recursos digitales</span>
+            REDS académicos para{" "}
+            <span className="text-primary">estudiantes de bachillerato</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground sm:text-xl">
-            Un espacio digital para reunir recursos digitales, informes, guias y
-            materiales desarrollados por la comunidad de REDS Colombia.
+            Un repositorio institucional donde los docentes cargan recursos digitales,
+            los evaluadores profesionales validan su calidad y los estudiantes de bachillerato
+            acceden a materiales confiables, claros y listos para aprender mejor.
           </p>
 
           <form onSubmit={handleSearch} className="mx-auto mt-10 max-w-2xl">
@@ -81,7 +82,7 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por titulo, autor, programa, palabra clave o año..."
+                  placeholder="Buscar por título, autor, programa, palabra clave o año..."
                   className="h-14 pl-12 pr-14 text-base shadow-sm"
                 />
                 <Button
@@ -93,13 +94,13 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
                   disabled={!isRecognitionSupported}
                   aria-label={
                     isListening
-                      ? "Detener busqueda por voz"
-                      : "Iniciar busqueda por voz"
+                      ? "Detener búsqueda por voz"
+                      : "Iniciar búsqueda por voz"
                   }
                   title={
                     isRecognitionSupported
                       ? "Buscar con voz"
-                      : "La busqueda por voz no esta disponible en este navegador"
+                      : "La búsqueda por voz no está disponible en este navegador"
                   }
                 >
                   {isRecognitionSupported ? (
@@ -116,12 +117,12 @@ export function HeroSection({ onSearch }: HeroSectionProps) {
             </div>
             <div className="mt-3 min-h-5 text-left text-sm text-muted-foreground">
               {isListening
-                ? "Escuchando... habla ahora para buscar automaticamente."
+                ? "Escuchando... habla ahora para buscar automáticamente."
                 : error
                   ? error
                   : !isRecognitionSupported
-                    ? "La busqueda por voz funciona mejor en Chrome o Edge."
-                    : "Tambien puedes buscar usando tu voz con el icono del microfono."}
+                    ? "La búsqueda por voz funciona mejor en Chrome o Edge."
+                    : "También puedes buscar usando tu voz con el icono del micrófono."}
             </div>
           </form>
 

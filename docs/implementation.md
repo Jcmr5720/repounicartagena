@@ -61,6 +61,8 @@ modelo oficial del proyecto:
 - `cartagena_publication_evaluations`
 - `cartagena_publication_workflow_events`
 - `cartagena_publication_favorites`
+- `cartagena_producto_programa`
+- `cartagena_producto_linea`
 - `cartagena_apply_publication_workflow_action(...)`
 - `cartagena_upsert_publication_evaluation(...)`
 
@@ -75,6 +77,29 @@ La tabla `cartagena_publication_favorites` guarda:
 
 Se impone unicidad por `user_id + publication_id` y RLS para que cada usuario
 solo vea, cree y elimine sus propios favoritos.
+
+### Catalogo academico normalizado
+
+- Los programas academicos viven en `cartagena_producto_programa`.
+- Las lineas tematicas viven en `cartagena_producto_linea`.
+- Cada fila de `cartagena_producto_linea` pertenece a un programa mediante
+  `programa_id`.
+- Las publicaciones de `cartagena_producto_producto` usan `programa_id` y
+  `linea_id` como referencia normalizada.
+- `linea_tematica` se conserva por compatibilidad, pero se sincroniza desde
+  `cartagena_producto_linea.nombre`.
+- El saneamiento historico reasigno todas las publicaciones existentes a
+  `Matemáticas` + `Álgebra`.
+
+### Frontend y validacion
+
+- `components/upload-page.tsx` obliga a seleccionar programa antes de habilitar
+  la linea tematica.
+- Las lineas visibles dependen del programa seleccionado.
+- `components/explore-page.tsx` filtra lineas por programa y ya no muestra
+  catalogo heredado.
+- `supabase/functions/cartagena_upload/index.ts` valida que la relacion entre
+  `programa_id` y `linea_id` exista realmente en `cartagena_producto_linea`.
 
 ### Workflow actualizado
 

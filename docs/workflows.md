@@ -26,6 +26,16 @@ Los estados usados por la aplicacion y el flujo oficial son:
 
 `docente crea/sube -> docente envia a evaluacion -> evaluador diligencia rubrica -> evaluador aprueba/rechaza/devuelve -> admin publica al final si fue aprobada`
 
+## Catalogo academico
+
+- Los programas academicos consultados por la aplicacion salen de
+  `cartagena_producto_programa`.
+- Las lineas tematicas salen de `cartagena_producto_linea` y dependen de un
+  programa especifico.
+- El formulario de subida y los filtros de exploracion respetan esa relacion:
+  programa primero, linea despues.
+- Las publicaciones heredadas fueron saneadas a `Matemáticas` + `Álgebra`.
+
 ## Acciones por rol
 
 ### Estudiante

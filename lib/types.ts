@@ -57,6 +57,20 @@ export interface AcademicProgram {
   updated_at?: string;
 }
 
+export interface ThematicLine {
+  id: string;
+  programa_id: string;
+  nombre: string;
+  slug: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AcademicProgramWithTopics {
+  nombre: string;
+  lineasTematicas: string[];
+}
+
 export interface Profile {
   id: string;
   email: string;
@@ -81,6 +95,7 @@ export interface Document {
   resumen: string;
   autor: string;
   programa_id: string;
+  linea_id: string;
   programa: string;
   año: number;
   lineaTematica: string;
@@ -182,39 +197,112 @@ export const EVALUATION_DECISION_LABELS: Record<EvaluationDecision, string> = {
   return_with_observations: "Devolver con observaciones",
 };
 
-export const PROGRAMAS_ACADEMICOS = [
-  "Ingeniería de Sistemas",
-  "Ingeniería Civil",
-  "Ingeniería Ambiental",
-  "Ingeniería Química",
-  "Medicina",
-  "Enfermería",
-  "Odontología",
-  "Derecho",
-  "Administración de Empresas",
-  "Contaduría Pública",
-  "Economía",
-  "Licenciatura en Matemáticas",
-  "Licenciatura en Lenguas Extranjeras",
-  "Trabajo Social",
-  "Comunicación Social",
-  "Historia",
-  "Filosofía",
-  "Química Farmacéutica",
+export const ACADEMIC_PROGRAMS_WITH_TOPICS: AcademicProgramWithTopics[] = [
+  { nombre: "Matemáticas", lineasTematicas: ["Aritmética", "Álgebra", "Geometría", "Estadística", "Probabilidad"] },
+  {
+    nombre: "Lengua castellana",
+    lineasTematicas: ["Comprensión lectora", "Producción textual", "Gramática", "Literatura", "Ortografía"],
+  },
+  {
+    nombre: "Inglés",
+    lineasTematicas: ["Vocabulario", "Gramática inglesa", "Comprensión oral", "Comprensión lectora", "Conversación"],
+  },
+  {
+    nombre: "Ciencias naturales",
+    lineasTematicas: ["Seres vivos", "Materia y energía", "Ecosistemas", "Método científico", "Ambiente"],
+  },
+  { nombre: "Biología", lineasTematicas: ["Célula", "Sistemas del cuerpo humano", "Genética", "Evolución", "Biodiversidad"] },
+  {
+    nombre: "Química",
+    lineasTematicas: ["Materia", "Átomos y moléculas", "Reacciones químicas", "Tabla periódica", "Mezclas y soluciones"],
+  },
+  { nombre: "Física", lineasTematicas: ["Movimiento", "Fuerza", "Energía", "Electricidad", "Ondas"] },
+  {
+    nombre: "Ciencias sociales",
+    lineasTematicas: ["Sociedad y cultura", "Organización política", "Territorio", "Conflictos sociales", "Derechos humanos"],
+  },
+  {
+    nombre: "Historia",
+    lineasTematicas: ["Historia antigua", "Historia de Colombia", "Historia universal", "Independencia", "Siglo XX"],
+  },
+  { nombre: "Geografía", lineasTematicas: ["Territorio", "Clima", "Relieve", "Población", "Regiones naturales"] },
+  {
+    nombre: "Constitución política y democracia",
+    lineasTematicas: ["Constitución colombiana", "Derechos y deberes", "Participación ciudadana", "Estado colombiano", "Democracia escolar"],
+  },
+  {
+    nombre: "Educación ética y valores humanos",
+    lineasTematicas: ["Valores personales", "Convivencia", "Resolución de conflictos", "Responsabilidad", "Proyecto de vida"],
+  },
+  {
+    nombre: "Educación religiosa",
+    lineasTematicas: ["Creencias y espiritualidad", "Valores religiosos", "Cultura religiosa", "Respeto por la diversidad", "Sentido de vida"],
+  },
+  { nombre: "Educación artística y cultural", lineasTematicas: ["Dibujo", "Música", "Teatro", "Danza", "Expresión cultural"] },
+  {
+    nombre: "Educación física, recreación y deportes",
+    lineasTematicas: ["Condición física", "Deportes", "Recreación", "Hábitos saludables", "Trabajo en equipo"],
+  },
+  {
+    nombre: "Tecnología e informática",
+    lineasTematicas: ["Herramientas digitales", "Programación básica", "Ofimática", "Internet seguro", "Innovación tecnológica"],
+  },
+  {
+    nombre: "Filosofía",
+    lineasTematicas: ["Pensamiento crítico", "Ética filosófica", "Lógica", "Antropología filosófica", "Teoría del conocimiento"],
+  },
+  {
+    nombre: "Ciencias económicas",
+    lineasTematicas: ["Economía básica", "Consumo responsable", "Finanzas personales", "Mercado", "Producción"],
+  },
+  {
+    nombre: "Ciencias políticas",
+    lineasTematicas: ["Poder político", "Estado y gobierno", "Participación política", "Ciudadanía", "Sistemas políticos"],
+  },
+  {
+    nombre: "Emprendimiento",
+    lineasTematicas: ["Ideas de negocio", "Plan de negocio", "Innovación", "Finanzas básicas", "Proyecto productivo"],
+  },
+  {
+    nombre: "Competencias ciudadanas",
+    lineasTematicas: ["Convivencia", "Participación democrática", "Pluralidad", "Derechos humanos", "Resolución pacífica de conflictos"],
+  },
+  {
+    nombre: "Lectura crítica",
+    lineasTematicas: ["Análisis de textos", "Argumentación", "Inferencia", "Interpretación", "Evaluación de información"],
+  },
+  {
+    nombre: "Proyecto de vida",
+    lineasTematicas: ["Autoconocimiento", "Metas personales", "Orientación vocacional", "Toma de decisiones", "Habilidades socioemocionales"],
+  },
 ];
 
-export const LINEAS_TEMATICAS = [
-  "Tecnología Educativa",
-  "Medio Ambiente",
-  "Derecho Digital",
-  "Ingeniería Estructural",
-  "Salud Pública",
-  "Pedagogía",
-  "Desarrollo de Software",
-  "Inteligencia Artificial",
-  "Gestión Empresarial",
-  "Ciencias Sociales",
-];
+export const PROGRAMAS_ACADEMICOS = ACADEMIC_PROGRAMS_WITH_TOPICS.map(
+  (programa) => programa.nombre,
+);
+
+export const ALL_LINEAS_TEMATICAS = Array.from(
+  new Set(
+    ACADEMIC_PROGRAMS_WITH_TOPICS.flatMap((programa) => programa.lineasTematicas),
+  ),
+).sort((left, right) => left.localeCompare(right, "es"));
+
+export const LINEAS_TEMATICAS = ALL_LINEAS_TEMATICAS;
+
+export function getLineasTematicasByPrograma(programa: string) {
+  return (
+    ACADEMIC_PROGRAMS_WITH_TOPICS.find((item) => item.nombre === programa)
+      ?.lineasTematicas ?? []
+  );
+}
+
+export function isValidProgramaLinea(programa: string, linea: string) {
+  if (!programa || !linea) {
+    return false;
+  }
+
+  return getLineasTematicasByPrograma(programa).includes(linea);
+}
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   estudiante: "Estudiante",

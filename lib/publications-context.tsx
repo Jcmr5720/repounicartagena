@@ -22,6 +22,7 @@ import type {
   PublicationEvaluationInput,
   PublicationEvaluation,
   PublicationReview,
+  ThematicLine,
   PublicationWorkflowAction,
   PublicationWorkflowEvent,
   PublicationWorkflowStatus,
@@ -30,6 +31,7 @@ import type {
 interface PublicationsContextType {
   publications: Publication[];
   programas: AcademicProgram[];
+  lineas: ThematicLine[];
   workflowEvents: PublicationWorkflowEvent[];
   reviews: PublicationReview[];
   evaluations: PublicationEvaluation[];
@@ -41,6 +43,7 @@ interface PublicationsContextType {
       description: string;
       autor: string;
       programa_id: string;
+      linea_id: string;
       anio?: number;
       año?: number;
       lineaTematica: string;
@@ -90,6 +93,7 @@ const PublicationsContext = createContext<PublicationsContextType | undefined>(
 const DOCUMENTS_BUCKET = "documents";
 const PUBLICATIONS_TABLE = "cartagena_producto_producto";
 const PROGRAMS_TABLE = "cartagena_producto_programa";
+const LINES_TABLE = "cartagena_producto_linea";
 const REVIEWS_TABLE = "cartagena_publication_reviews";
 const EVALUATIONS_TABLE = "cartagena_publication_evaluations";
 const WORKFLOW_EVENTS_TABLE = "cartagena_publication_workflow_events";
@@ -99,6 +103,8 @@ const LEGACY_PUBLICATIONS_STORAGE_KEY = ["repo", "sitorio_publications"].join(
   "",
 );
 const LEGACY_IMPORT_FLAG = "reds_colombia_documents_migrated";
+const PUBLICATION_SELECT =
+  "id,owner_id,title,description,autor,programa_id,linea_id,programa:cartagena_producto_programa(id,nombre),linea:cartagena_producto_linea(id,programa_id,nombre,slug),anio,linea_tematica,palabras_clave,status,workflow_status,storage_path,file_name,file_size,created_at,updated_at";
 
 type SupabaseDocumentRow = {
   id: string;
@@ -107,9 +113,16 @@ type SupabaseDocumentRow = {
   description: string;
   autor: string;
   programa_id: string;
+  linea_id: string;
   programa: {
     id: string;
     nombre: string;
+  }[] | null;
+  linea: {
+    id: string;
+    programa_id: string;
+    nombre: string;
+    slug: string;
   }[] | null;
   anio: number;
   linea_tematica: string;
@@ -126,6 +139,15 @@ type SupabaseDocumentRow = {
 type SupabaseProgramRow = {
   id: string;
   nombre: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type SupabaseLineRow = {
+  id: string;
+  programa_id: string;
+  nombre: string;
+  slug: string;
   created_at: string;
   updated_at: string;
 };
@@ -207,9 +229,10 @@ function mapRowToPublication(
     resumen: row.description,
     autor: row.autor,
     programa_id: row.programa_id,
+    linea_id: row.linea_id,
     programa: row.programa?.[0]?.nombre ?? "",
     año: row.anio,
-    lineaTematica: row.linea_tematica,
+    lineaTematica: row.linea?.[0]?.nombre ?? row.linea_tematica,
     palabrasClave: row.palabras_clave ?? [],
     status: row.status,
     estado: row.status,
@@ -283,6 +306,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useAuth();
   const [publications, setPublications] = useState<Publication[]>([]);
   const [programas, setProgramas] = useState<AcademicProgram[]>([]);
+  const [lineas, setLineas] = useState<ThematicLine[]>([]);
   const [workflowEvents, setWorkflowEvents] = useState<PublicationWorkflowEvent[]>(
     [],
   );
@@ -291,6 +315,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<PublicationFavorite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const programasRef = useRef<AcademicProgram[]>([]);
+  const lineasRef = useRef<ThematicLine[]>([]);
 
   const resolveProgramId = useCallback(
     async (programaNombre: string) => {
@@ -354,6 +379,89 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     setProgramas(rows);
     return rows;
   }, [supabase]);
+
+  const loadLines = useCallback(async () => {
+    if (!supabase) {
+      setLineas([]);
+      return [];
+    }
+
+    const { data, error } = await supabase
+      .from(LINES_TABLE)
+      .select("id,programa_id,nombre,slug,created_at,updated_at")
+      .order("nombre", { ascending: true });
+
+    if (error) {
+      console.error("Error loading thematic lines", error);
+      setLineas([]);
+      return [];
+    }
+
+    const rows = ((data ?? []) as SupabaseLineRow[]).sort((left, right) =>
+      left.nombre.localeCompare(right.nombre, "es"),
+    );
+    lineasRef.current = rows;
+    setLineas(rows);
+    return rows;
+  }, [supabase]);
+
+  const resolveLine = useCallback(
+    async (programaId: string, lineaId?: string, lineaNombre?: string) => {
+      if (!supabase) {
+        return { error: "Supabase no esta disponible" };
+      }
+
+      if (!programaId) {
+        return { error: "Debes seleccionar un programa" };
+      }
+
+      const normalizedLineName = lineaNombre?.trim() ?? "";
+
+      if (lineaId) {
+        const cachedLine = lineasRef.current.find((linea) => linea.id === lineaId);
+        if (cachedLine) {
+          if (cachedLine.programa_id !== programaId) {
+            return { error: "La línea temática no pertenece al programa seleccionado" };
+          }
+
+          if (normalizedLineName && cachedLine.nombre !== normalizedLineName) {
+            return { error: "La línea temática seleccionada no coincide con el nombre enviado" };
+          }
+
+          return { id: cachedLine.id, nombre: cachedLine.nombre };
+        }
+      }
+
+      let query = supabase
+        .from(LINES_TABLE)
+        .select("id,programa_id,nombre,slug,created_at,updated_at")
+        .eq("programa_id", programaId);
+
+      if (lineaId) {
+        query = query.eq("id", lineaId);
+      }
+
+      if (normalizedLineName) {
+        query = query.eq("nombre", normalizedLineName);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      if (!data) {
+        return { error: "La línea temática no pertenece al programa seleccionado" };
+      }
+
+      return {
+        id: (data as SupabaseLineRow).id,
+        nombre: (data as SupabaseLineRow).nombre,
+      };
+    },
+    [supabase],
+  );
 
   const loadWorkflowArtifacts = useCallback(
     async (publicationIds: string[]) => {
@@ -440,6 +548,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     if (!supabase) {
       setPublications([]);
       setProgramas([]);
+      setLineas([]);
       setWorkflowEvents([]);
       setReviews([]);
       setEvaluations([]);
@@ -450,13 +559,12 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
 
     setIsLoading(true);
     await loadPrograms();
+    await loadLines();
 
     const shouldFetchAccessible = !!user || canViewAllDocuments(user);
     const baseQuery = supabase
       .from(PUBLICATIONS_TABLE)
-      .select(
-        "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,workflow_status,storage_path,file_name,file_size,created_at,updated_at",
-      )
+      .select(PUBLICATION_SELECT)
       .order("created_at", { ascending: false });
 
     const { data, error } = shouldFetchAccessible
@@ -466,6 +574,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     if (error) {
       console.error("Error loading publications", error);
       setPublications([]);
+      setLineas([]);
       setWorkflowEvents([]);
       setReviews([]);
       setEvaluations([]);
@@ -492,8 +601,15 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
           for (const publication of legacyPublications) {
             const programaName = normalizeProgramName(publication.programa ?? "");
             const { id: programaId } = await resolveProgramId(programaName);
+            const lineaResult = programaId
+              ? await resolveLine(
+                  programaId,
+                  undefined,
+                  publication.lineaTematica?.trim() || "Álgebra",
+                )
+              : { id: undefined };
 
-            if (!programaId) {
+            if (!programaId || !lineaResult.id) {
               continue;
             }
 
@@ -503,8 +619,10 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
               description: publication.resumen?.trim() || "",
               autor: publication.autor?.trim() || "",
               programa_id: programaId,
+              linea_id: lineaResult.id,
               anio: publication.anio ?? new Date().getFullYear(),
-              linea_tematica: publication.lineaTematica?.trim() || "",
+              linea_tematica:
+                publication.lineaTematica?.trim() || lineaResult.nombre || "Álgebra",
               palabras_clave: publication.palabrasClave ?? [],
               workflow_status:
                 publication.estado === "suspendido" ? "suspendida" : "publicada",
@@ -524,9 +642,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     const activeRows = importedLegacyDocuments
       ? ((await supabase
           .from(PUBLICATIONS_TABLE)
-          .select(
-            "id,owner_id,title,description,autor,programa_id,programa:cartagena_producto_programa(id,nombre),anio,linea_tematica,palabras_clave,status,workflow_status,storage_path,file_name,file_size,created_at,updated_at",
-          )
+          .select(PUBLICATION_SELECT)
           .order("created_at", { ascending: false })).data ?? []) as SupabaseDocumentRow[]
       : rows;
 
@@ -549,9 +665,11 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, [
     loadFavorites,
+    loadLines,
     loadPrograms,
     loadWorkflowArtifacts,
     resolveProgramId,
+    resolveLine,
     supabase,
     user,
   ]);
@@ -574,6 +692,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       description: string;
       autor: string;
       programa_id: string;
+      linea_id: string;
       anio?: number;
       año?: number;
       lineaTematica: string;
@@ -613,13 +732,28 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "El año del documento es obligatorio" };
       }
 
+      const lineaResult = await resolveLine(
+        publication.programa_id,
+        publication.linea_id,
+        publication.lineaTematica,
+      );
+      if (!lineaResult.id) {
+        return {
+          success: false,
+          error:
+            lineaResult.error ||
+            "La línea temática no pertenece al programa seleccionado",
+        };
+      }
+
       const formData = new FormData();
       formData.append("file", publication.file);
       formData.append("title", publication.title.trim());
       formData.append("autor", publication.autor.trim());
       formData.append("programa_id", publication.programa_id);
+      formData.append("linea_id", lineaResult.id);
       formData.append("anio", publicationYear.toString());
-      formData.append("linea_tematica", publication.lineaTematica.trim());
+      formData.append("linea_tematica", lineaResult.nombre || publication.lineaTematica.trim());
       formData.append("resumen", publication.description.trim());
       formData.append(
         "palabras_clave",
@@ -656,7 +790,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       await loadPublications();
       return { success: true, documentId: payload.document_id };
     },
-    [loadPublications, supabase],
+    [loadPublications, resolveLine, supabase],
   );
 
   const updatePublication = useCallback(
@@ -665,7 +799,17 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Supabase no esta disponible" };
       }
 
+      const currentPublication = publications.find(
+        (publication) => publication.id === id,
+      );
+      if (!currentPublication) {
+        return { success: false, error: "La publicacion no existe" };
+      }
+
       const payload: Record<string, unknown> = {};
+      let nextProgramId = currentPublication.programa_id;
+      let nextLineId = currentPublication.linea_id;
+      let nextLineName = currentPublication.lineaTematica;
 
       if (updates.title !== undefined) payload.title = updates.title.trim();
       if (updates.titulo !== undefined) payload.title = updates.titulo.trim();
@@ -676,6 +820,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       if (updates.autor !== undefined) payload.autor = updates.autor.trim();
       if (updates.programa_id !== undefined) {
         payload.programa_id = updates.programa_id;
+        nextProgramId = updates.programa_id;
       } else if (updates.programa !== undefined) {
         const { id: programaId, error: programaError } = await resolveProgramId(
           updates.programa,
@@ -690,11 +835,36 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
         }
 
         payload.programa_id = programaId;
+        nextProgramId = programaId;
       }
       if (updates.año !== undefined) payload.anio = updates.año;
-      if (updates.lineaTematica !== undefined) {
-        payload.linea_tematica = updates.lineaTematica.trim();
+      if (updates.linea_id !== undefined) {
+        nextLineId = updates.linea_id;
       }
+      if (updates.lineaTematica !== undefined) {
+        nextLineName = updates.lineaTematica.trim();
+      }
+
+      if (
+        updates.programa_id !== undefined ||
+        updates.programa !== undefined ||
+        updates.linea_id !== undefined ||
+        updates.lineaTematica !== undefined
+      ) {
+        const lineaResult = await resolveLine(nextProgramId, nextLineId, nextLineName);
+        if (!lineaResult.id) {
+          return {
+            success: false,
+            error:
+              lineaResult.error ||
+              "La línea temática no pertenece al programa seleccionado",
+          };
+        }
+
+        payload.linea_id = lineaResult.id;
+        payload.linea_tematica = lineaResult.nombre;
+      }
+
       if (updates.palabrasClave !== undefined) {
         payload.palabras_clave = updates.palabrasClave;
       }
@@ -714,7 +884,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       await loadPublications();
       return { success: true };
     },
-    [loadPublications, resolveProgramId, supabase],
+    [loadPublications, publications, resolveLine, resolveProgramId, supabase],
   );
 
   const deletePublication = useCallback(
@@ -940,6 +1110,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
     () => ({
       publications,
       programas,
+      lineas,
       workflowEvents,
       reviews,
       evaluations,
@@ -972,6 +1143,7 @@ export function PublicationsProvider({ children }: { children: ReactNode }) {
       isLoading,
       isFavorite,
       programas,
+      lineas,
       publications,
       refreshPublications,
       reviews,

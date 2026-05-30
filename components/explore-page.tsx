@@ -16,7 +16,12 @@ import {
 } from "lucide-react";
 import { useSpeech } from "@/hooks/use-speech";
 import { usePublications } from "@/lib/publications-context";
-import { LINEAS_TEMATICAS, PROGRAMAS_ACADEMICOS, type Publication } from "@/lib/types";
+import {
+  ALL_LINEAS_TEMATICAS,
+  getLineasTematicasByPrograma,
+  PROGRAMAS_ACADEMICOS,
+  type Publication,
+} from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -63,7 +68,7 @@ function ExploreContent({
   initialSearch: string;
   publications: Publication[];
 }) {
-  const { programas } = usePublications();
+  const { programas, lineas } = usePublications();
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [programaFilter, setProgramaFilter] = useState<string>("");
   const [lineaFilter, setLineaFilter] = useState<string>("");
@@ -81,6 +86,20 @@ function ExploreContent({
     programas.length > 0
       ? programas
       : PROGRAMAS_ACADEMICOS.map((nombre) => ({ id: nombre, nombre }));
+
+  const selectedProgramId =
+    programOptions.find((program) => program.nombre === programaFilter)?.id ?? "";
+  const lineOptions = selectedProgramId
+    ? (lineas.length > 0
+        ? lineas
+            .filter((linea) => linea.programa_id === selectedProgramId)
+            .map((linea) => linea.nombre)
+        : getLineasTematicasByPrograma(programaFilter))
+    : (lineas.length > 0
+        ? Array.from(new Set(lineas.map((linea) => linea.nombre))).sort((left, right) =>
+            left.localeCompare(right, "es"),
+          )
+        : ALL_LINEAS_TEMATICAS);
 
   const filteredPublications = publications.filter((pub) => {
     const matchesSearch =
@@ -110,6 +129,11 @@ function ExploreContent({
     setLineaFilter("");
     setAnioFilter("");
     clearError();
+  };
+
+  const handleProgramFilterChange = (value: string) => {
+    setProgramaFilter(value);
+    setLineaFilter("");
   };
 
   const handleVoiceSearch = () => {
@@ -207,7 +231,7 @@ function ExploreContent({
               Filtros:
             </div>
 
-            <Select value={programaFilter} onValueChange={setProgramaFilter}>
+            <Select value={programaFilter} onValueChange={handleProgramFilterChange}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Programa academico" />
               </SelectTrigger>
@@ -225,7 +249,7 @@ function ExploreContent({
                 <SelectValue placeholder="Linea tematica" />
               </SelectTrigger>
               <SelectContent>
-                {LINEAS_TEMATICAS.map((linea) => (
+                {lineOptions.map((linea) => (
                   <SelectItem key={linea} value={linea}>
                     {linea}
                   </SelectItem>

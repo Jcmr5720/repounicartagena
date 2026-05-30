@@ -8,6 +8,7 @@ const CORS_HEADERS = {
 
 const PUBLICATIONS_TABLE = "cartagena_producto_producto";
 const PROGRAMS_TABLE = "cartagena_producto_programa";
+const LINES_TABLE = "cartagena_producto_linea";
 const PROFILES_TABLE = "cartagena_usuario_usuario";
 const BUCKET_NAME = "documents";
 
@@ -23,6 +24,7 @@ type UploadPayload = {
   description: string;
   autor: string;
   programa_id: string;
+  linea_id: string;
   anio: number;
   linea_tematica: string;
   palabras_clave: string[];
@@ -159,12 +161,13 @@ async function handleUpload(request: Request) {
   const description = normalizeText(formData.get("resumen"));
   const autor = normalizeText(formData.get("autor"));
   const programaId = normalizeText(formData.get("programa_id"));
+  const lineaId = normalizeText(formData.get("linea_id"));
   const lineaTematica = normalizeText(formData.get("linea_tematica"));
   const anio = Number.parseInt(normalizeText(formData.get("anio")), 10);
   const palabrasClave = parseKeywords(formData.get("palabras_clave"));
   const workflowStatus = normalizeText(formData.get("workflow_status")) || "borrador";
 
-  if (!title || !description || !autor || !programaId || !lineaTematica || !Number.isFinite(anio)) {
+  if (!title || !description || !autor || !programaId || !lineaId || !lineaTematica || !Number.isFinite(anio)) {
     return jsonResponse({ error: "Missing required upload fields" }, 400);
   }
 
@@ -182,7 +185,7 @@ async function handleUpload(request: Request) {
     return jsonResponse({ error: "User profile not found" }, 403);
   }
 
-  if (profile.role !== "admin" && profile.role !== "estudiante") {
+  if (profile.role !== "admin" && profile.role !== "docente") {
     return jsonResponse({ error: "You do not have permission to upload documents" }, 403);
   }
 
@@ -198,6 +201,34 @@ async function handleUpload(request: Request) {
 
   if (!program) {
     return jsonResponse({ error: "Selected program does not exist" }, 400);
+  }
+
+  const { data: line, error: lineError } = await client
+    .from(LINES_TABLE)
+    .select("id,programa_id,nombre")
+    .eq("id", lineaId)
+    .maybeSingle();
+
+  if (lineError) {
+    return jsonResponse({ error: lineError.message }, 400);
+  }
+
+  if (!line) {
+    return jsonResponse({ error: "Selected thematic line does not exist" }, 400);
+  }
+
+  if (line.programa_id !== programaId) {
+    return jsonResponse(
+      { error: "The selected thematic line does not belong to the selected program" },
+      400,
+    );
+  }
+
+  if (line.nombre !== lineaTematica) {
+    return jsonResponse(
+      { error: "The thematic line name does not match the selected line" },
+      400,
+    );
   }
 
   let existingDocument:
@@ -256,8 +287,9 @@ async function handleUpload(request: Request) {
     description,
     autor,
     programa_id: programaId,
+    linea_id: lineaId,
     anio,
-    linea_tematica: lineaTematica,
+    linea_tematica: line.nombre,
     palabras_clave: palabrasClave,
     workflow_status: workflowStatus,
     document_id: documentId,
@@ -272,6 +304,7 @@ async function handleUpload(request: Request) {
         description: payload.description,
         autor: payload.autor,
         programa_id: payload.programa_id,
+        linea_id: payload.linea_id,
         anio: payload.anio,
         linea_tematica: payload.linea_tematica,
         palabras_clave: payload.palabras_clave,
@@ -319,6 +352,7 @@ async function handleUpload(request: Request) {
       description: payload.description,
       autor: payload.autor,
       programa_id: payload.programa_id,
+      linea_id: payload.linea_id,
       anio: payload.anio,
       linea_tematica: payload.linea_tematica,
       palabras_clave: payload.palabras_clave,

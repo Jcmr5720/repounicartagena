@@ -86,6 +86,14 @@ tematica y palabras clave, alineados con el contexto de recursos digitales
 academicos. La normalizacion se apoya en `lib/publication-metadata.ts` y su
 representacion visual en `components/publication-metadata-section.tsx`.
 
+Adicionalmente, el catalogo academico ya no depende solo de listas planas en
+frontend: `cartagena_producto_programa` normaliza los programas y
+`cartagena_producto_linea` normaliza las lineas tematicas por programa. Las
+publicaciones conservan compatibilidad visual con `linea_tematica`, pero la
+relacion real queda asegurada con `programa_id` + `linea_id`. El saneamiento
+tecnico reasigno todas las publicaciones historicas a `Matemáticas` +
+`Álgebra`.
+
 **Conclusion:**  
 Si esta implementado.
 
